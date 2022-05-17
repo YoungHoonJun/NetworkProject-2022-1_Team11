@@ -152,13 +152,23 @@ VideoStreamClient::StopApplication ()
 }
 
 void
+VideoStreamClient::ChangeServer (Address s_ip, uint16_t s_port)
+{
+	NS_LOG_FUNCTION (this);
+	
+	this->StopApplication();
+	this->SetRemote(s_ip, s_port);
+	this->StartApplication();
+}
+
+void
 VideoStreamClient::Send (void)
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
 
   uint8_t dataBuffer[10];
-  sprintf((char *) dataBuffer, "%hu", 0);
+  sprintf((char *) dataBuffer, "%hu", (unsigned short int)0);
   Ptr<Packet> firstPacket = Create<Packet> (dataBuffer, 10);
   m_socket->Send (firstPacket);
 
@@ -294,4 +304,6 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
   }
 }
 
+
 } // namespace ns3
+

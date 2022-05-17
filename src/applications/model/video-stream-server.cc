@@ -170,6 +170,15 @@ VideoStreamServer::Send (uint32_t ipAddress)
   uint32_t frameSize, totalFrames;
   ClientInfo *clientInfo = m_clients.at (ipAddress);
 
+  //NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server about to send");
+  if (m_lastTime.find(ipAddress) != m_lastTime.end()){ //that ip has time log
+	  double lastTime = m_lastTime.at (ipAddress);
+	  if (Simulator::Now().GetSeconds() - lastTime > 3.0){
+		  Simulator::Cancel(clientInfo->m_sendEvent);
+          return;
+	  }
+  }
+
   NS_ASSERT (clientInfo->m_sendEvent.IsExpired ());
   // If the frame sizes are not from the text file, and the list is empty
   if (m_frameSizeList.empty ())
@@ -239,9 +248,11 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
         // newClient->m_sendEvent = EventId ();
         m_clients[ipAddr] = newClient;
         newClient->m_sendEvent = Simulator::Schedule (Seconds (0.0), &VideoStreamServer::Send, this, ipAddr);
+		m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
       }
       else
       {
+		m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
         uint8_t dataBuffer[10];
         packet->CopyData (dataBuffer, 10);
 
@@ -253,5 +264,6 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
     }
   }
 }
+
 
 } // namespace ns3

@@ -44,38 +44,64 @@ main (int argc, char *argv[])
   if (CASE == 1)
   {
     NodeContainer nodes;
-    nodes.Create (2);
+    nodes.Create (3);
+	NodeContainer n0n1 = NodeContainer(nodes.Get(0), nodes.Get(1));
+	NodeContainer n0n2 = NodeContainer(nodes.Get(0), nodes.Get(2));
+
 
     PointToPointHelper pointToPoint;
     pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
     pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
-    NetDeviceContainer devices;
-    devices = pointToPoint.Install (nodes);
+
+    NetDeviceContainer devices_0;
+	NetDeviceContainer devices_1;
+    devices_0 = pointToPoint.Install (n0n1);
+	devices_1 = pointToPoint.Install (n0n2);
+
 
     InternetStackHelper stack;
     stack.Install (nodes);
 
     Ipv4AddressHelper address;
     address.SetBase ("10.1.1.0", "255.255.255.0");
+    Ipv4InterfaceContainer interfaces_0 = address.Assign (devices_0);
 
-    Ipv4InterfaceContainer interfaces = address.Assign (devices);
+	address.SetBase ("10.1.2.0", "255.255.255.0");
+	Ipv4InterfaceContainer interfaces_1 = address.Assign (devices_1);
 
-    VideoStreamClientHelper videoClient (interfaces.GetAddress (0), 5000);
-    ApplicationContainer clientApp = videoClient.Install (nodes.Get (1));
-    clientApp.Start (Seconds (0.5));
-    clientApp.Stop (Seconds (100.0));
+
+    VideoStreamClientHelper videoClient (interfaces_0.GetAddress (1), 5000);
+    ApplicationContainer clientApp_1 = videoClient.Install (nodes.Get (0));
+    clientApp_1.Start (Seconds (0.5));
+    clientApp_1.Stop (Seconds (2.0));
+
+	videoClient.SetAttribute ("RemoteAddress", AddressValue(interfaces_1.GetAddress(1)) );
+	videoClient.SetAttribute ("RemotePort", UintegerValue(5000));
+	ApplicationContainer clientApp_2 = videoClient.Install (nodes.Get (0));
+	clientApp_2.Start (Seconds (8.0));
+	clientApp_2.Stop (Seconds (10.0));
+
+
 
     VideoStreamServerHelper videoServer (5000);
     videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
     videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/frameList.txt"));
     // videoServer.SetAttribute ("FrameSize", UintegerValue (4096));
 
-    ApplicationContainer serverApp = videoServer.Install (nodes.Get (0));
-    serverApp.Start (Seconds (0.0));
-    serverApp.Stop (Seconds (100.0));
+    ApplicationContainer serverApp_1 = videoServer.Install (nodes.Get (1));
+	
+    serverApp_1.Start (Seconds (0.0));
+    serverApp_1.Stop (Seconds (100.0));
 
-    pointToPoint.EnablePcap ("videoStream", devices.Get (1), false);
+	ApplicationContainer serverApp_2 = videoServer.Install (nodes.Get (2));
+
+	serverApp_2.Start (Seconds (0.0));
+	serverApp_2.Stop (Seconds (100.0));
+
+    pointToPoint.EnablePcap ("videoStream", devices_0.Get(1), false);
+	pointToPoint.EnablePcap ("videoStream", devices_1.Get(1), false);
+
     Simulator::Run ();
     Simulator::Destroy ();
   }
