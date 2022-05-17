@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 
 using namespace ns3;
 //using namespace std;
@@ -22,7 +23,8 @@ using namespace ns3;
  * 2. P2P network with 1 server and 2 clients
  * 3. Wireless network with 1 server and 3 mobile clients
  * 4. Wireless network with 3 servers and 3 mobile clients
- * 5. New system
+ * 5. New system(wi-fi)
+ * 6. New system(p2p)
  */
 #define CASE 5
 
@@ -35,13 +37,38 @@ int main (int argc, char *argv[])
 
   std::ifstream fin("/home/junyounghoon/ns-allinone-3.29/ns-3.29/scratch/videoStreamer/input.txt");
   std::string line;
+  std::vector<std::vector<int>> route = {};
+
+  route.push_back({0, 1});
 
   getline(fin, line);
-  //const uint32_t nodeNum = line[0] - '0';
-  //const uint32_t bridgeNum = line[2] - '0';
+  const uint32_t nodeNum = line[0] - '0';
+  const uint32_t bridgeNum = line[2] - '0';
 
   while (!fin.eof()) {
     getline(fin, line);
+
+    std::vector<int> v_temp = {};
+
+    const uint32_t temp1 = line[0] - '0';
+    const uint32_t temp2 = line[2] - '0';
+
+    v_temp.push_back(temp1);
+    v_temp.push_back(temp2);
+
+    route.push_back(v_temp);
+    
+    if (fin.eof()) {
+      std::vector<int> v_temp = {};
+
+      const uint32_t temp1 = nodeNum;
+      const uint32_t temp2 = nodeNum + 1;
+
+      v_temp.push_back(temp1);
+      v_temp.push_back(temp2);
+
+      route.push_back(v_temp);
+    }
   }
 
   Time::SetResolution (Time::NS);
@@ -86,7 +113,7 @@ int main (int argc, char *argv[])
     Simulator::Run ();
     Simulator::Destroy ();
   }
-
+  
   else if (CASE == 2)
   {
     NodeContainer nodes;
@@ -319,19 +346,18 @@ int main (int argc, char *argv[])
   }
   else if (CASE == 5)
   {
-    const uint32_t nWifi = 1, nAp = 1;
+    const uint32_t nWifi = nodeNum + 2, nAp = nodeNum + 2;
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create (nWifi);  
+    wifiStaNodes.Create (nWifi);
     NodeContainer wifiApNode;
-    wifiApNode.Create(nAp);   
+    wifiApNode.Create(nAp);
     
-    YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();   
-    YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();  
-    phy.SetChannel (channel.Create ());  
+    YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
+    YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();
+    phy.SetChannel (channel.Create ());
   
     WifiHelper wifi;
-    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");  
-  
+    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
   
     WifiMacHelper mac; 
     Ssid ssid = Ssid ("ns-3-aqiao");  
@@ -388,11 +414,11 @@ int main (int argc, char *argv[])
       serverApps.Stop (Seconds (100.0));
     }
   
-    for(uint k=0; k<nWifi; k++)
+    for(uint k=0; k<bridgeNum+2; k++)
     {
-      VideoStreamClientHelper videoClient (apInterfaces.GetAddress (k), 5000);
+      VideoStreamClientHelper videoClient (apInterfaces.GetAddress (route[k][1]), 5000);
       ApplicationContainer clientApps =
-      videoClient.Install (wifiStaNodes.Get (k));
+      videoClient.Install (wifiStaNodes.Get (route[k][0]));
       clientApps.Start (Seconds (0.5));
       clientApps.Stop (Seconds (100.0));
     }
@@ -401,8 +427,68 @@ int main (int argc, char *argv[])
   
     Simulator::Stop (Seconds (10.0));
   
-    phy.EnablePcap ("wifi-videoStream", apDevices.Get (0));
+    phy.EnablePcap ("wifi-videoStream", staDevices.Get (nWifi - 1));
     AnimationInterface anim("wifi-1-3.xml");
+    Simulator::Run ();
+    Simulator::Destroy ();
+  }
+  else if (CASE == 6) {
+    NodeContainer nodes;
+    nodes.Create (nodeNum + 2);
+
+    NodeContainer n0n1= NodeContainer (nodes.Get(0), nodes.Get(1));
+    NodeContainer n1n2= NodeContainer (nodes.Get(1), nodes.Get(2));
+
+    PointToPointHelper pointToPoint;
+    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
+    pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+
+    NetDeviceContainer d0d1= pointToPoint.Install (n0n1);
+
+    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("2Mbps"));
+    pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+
+    NetDeviceContainer d1d2= pointToPoint.Install (n1n2);
+
+    InternetStackHelper stack;
+    stack.Install (nodes);
+
+    Ipv4AddressHelper address;
+    address.SetBase ("10.1.1.0", "255.255.255.0");
+    address.Assign (d0d1);
+
+    address.SetBase ("10.1.2.0", "255.255.255.0");
+    address.Assign (d1d2);
+
+    //Ipv4InterfaceContainer interfaces = address.Assign (devices);
+    Ipv4InterfaceContainer i0i1 = address.Assign (d0d1);
+    Ipv4InterfaceContainer i1i2 = address.Assign (d1d2);
+
+    VideoStreamClientHelper videoClient1 (i0i1.GetAddress (0), 5000);
+    ApplicationContainer clientApp1 = videoClient1.Install (nodes.Get (1));
+    clientApp1.Start (Seconds (1.0));
+    clientApp1.Stop (Seconds (100.0));
+
+    VideoStreamClientHelper videoClient2 (i1i2.GetAddress (0), 5000);
+    ApplicationContainer clientApp2 = videoClient2.Install (nodes.Get (2));
+    clientApp2.Start (Seconds (0.5));
+    clientApp2.Stop (Seconds (100.0));
+
+    VideoStreamServerHelper videoServer (5000);
+    videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
+    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
+    // videoServer.SetAttribute ("FrameSize", UintegerValue (4096));
+
+    ApplicationContainer serverApp1 = videoServer.Install (nodes.Get (0));
+    serverApp1.Start (Seconds (0.0));
+    serverApp1.Stop (Seconds (100.0));
+
+    ApplicationContainer serverApp2 = videoServer.Install (nodes.Get (1));
+    serverApp2.Start (Seconds (0.0));
+    serverApp2.Stop (Seconds (100.0));
+
+    pointToPoint.EnablePcap ("videoStream", d0d1.Get (1), false);
+    pointToPoint.EnablePcap ("videoStream", d1d2.Get (1), false);
     Simulator::Run ();
     Simulator::Destroy ();
   }
