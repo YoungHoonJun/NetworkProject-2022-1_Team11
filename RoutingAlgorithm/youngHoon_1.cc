@@ -113,7 +113,6 @@ int main (int argc, char *argv[])
     Simulator::Run ();
     Simulator::Destroy ();
   }
-  
   else if (CASE == 2)
   {
     NodeContainer nodes;
@@ -427,7 +426,7 @@ int main (int argc, char *argv[])
   
     Simulator::Stop (Seconds (10.0));
   
-    phy.EnablePcap ("wifi-videoStream", staDevices.Get (nWifi - 1));
+    phy.EnablePcap ("wifi-videoStream", apDevices.Get (nWifi - 1));
     AnimationInterface anim("wifi-1-3.xml");
     Simulator::Run ();
     Simulator::Destroy ();
