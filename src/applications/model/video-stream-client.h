@@ -51,7 +51,11 @@ protected:
 private: 
   virtual void StartApplication (void);
   virtual void StopApplication (void);
+<<<<<<< HEAD
   virtual void ChangeServer(Address s_ip, uint16_t s_port);
+=======
+
+>>>>>>> d3e3ed0eb879c4722181449712c421f4c2e7f109
   /**
    * @brief Send the packet to the remote server.
    */
