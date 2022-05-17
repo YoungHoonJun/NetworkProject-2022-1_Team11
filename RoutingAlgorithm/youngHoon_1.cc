@@ -7,21 +7,43 @@
 #include "ns3/mobility-module.h"
 #include "ns3/csma-module.h"
 #include "ns3/netanim-module.h"
+#include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace ns3;
+//using namespace std;
 
 //#define NS3_LOG_ENABLE
 
+/**
+ * @brief The test cases include:
+ * 1. P2P network with 1 server and 1 client
+ * 2. P2P network with 1 server and 2 clients
+ * 3. Wireless network with 1 server and 3 mobile clients
+ * 4. Wireless network with 3 servers and 3 mobile clients
+ * 5. New system
+ */
 #define CASE 5
 
 NS_LOG_COMPONENT_DEFINE ("VideoStreamTest");
 
-int
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
   CommandLine cmd;
   cmd.Parse (argc, argv);
-  
+
+  std::ifstream fin("/home/junyounghoon/ns-allinone-3.29/ns-3.29/scratch/videoStreamer/input.txt");
+  std::string line;
+
+  getline(fin, line);
+  //const uint32_t nodeNum = line[0] - '0';
+  //const uint32_t bridgeNum = line[2] - '0';
+
+  while (!fin.eof()) {
+    getline(fin, line);
+  }
+
   Time::SetResolution (Time::NS);
   LogComponentEnable ("VideoStreamClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable ("VideoStreamServerApplication", LOG_LEVEL_INFO);
@@ -150,17 +172,17 @@ main (int argc, char *argv[])
 
     MobilityHelper mobility; 
     mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
-                                 "MinX", DoubleValue (0.0),
-                                 "MinY", DoubleValue (0.0),
-                                 "DeltaX", DoubleValue (30.0),
-                                 "DeltaY", DoubleValue (30.0),
-                                 "GridWidth", UintegerValue (2),
-                                 "LayoutType", StringValue ("RowFirst"));
- 
+                                "MinX", DoubleValue (0.0),
+                                "MinY", DoubleValue (0.0),
+                                "DeltaX", DoubleValue (30.0),
+                                "DeltaY", DoubleValue (30.0),
+                                "GridWidth", UintegerValue (2),
+                                "LayoutType", StringValue ("RowFirst"));
+
     
     mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel", "Bounds", RectangleValue (Rectangle (-50, 50, -50, 50)));   
     mobility.Install (wifiStaNodes);
-   
+  
     mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");  
     mobility.Install (wifiApNode);
   
@@ -297,8 +319,94 @@ main (int argc, char *argv[])
   }
   else if (CASE == 5)
   {
-
+    const uint32_t nWifi = 1, nAp = 1;
+    NodeContainer wifiStaNodes;
+    wifiStaNodes.Create (nWifi);  
+    NodeContainer wifiApNode;
+    wifiApNode.Create(nAp);   
+    
+    YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();   
+    YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();  
+    phy.SetChannel (channel.Create ());  
+  
+    WifiHelper wifi;
+    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");  
+  
+  
+    WifiMacHelper mac; 
+    Ssid ssid = Ssid ("ns-3-aqiao");  
+    mac.SetType ("ns3::StaWifiMac",    
+                "Ssid", SsidValue (ssid),   
+                "ActiveProbing", BooleanValue (false));  
+  
+    NetDeviceContainer staDevices;
+    staDevices = wifi.Install (phy, mac, wifiStaNodes);  
+  
+    mac.SetType ("ns3::ApWifiMac",   
+                "Ssid", SsidValue (ssid));   
+  
+    NetDeviceContainer apDevices;
+    apDevices = wifi.Install (phy, mac, wifiApNode);   
+    MobilityHelper mobility; 
+    mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
+                                  "MinX", DoubleValue (0.0),
+                                  "MinY", DoubleValue (0.0),
+                                  "DeltaX", DoubleValue (50.0),
+                                  "DeltaY", DoubleValue (30.0),
+                                  "GridWidth", UintegerValue (3),
+                                  "LayoutType", StringValue ("RowFirst"));
+  
+    mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");  
+    mobility.Install (wifiApNode);
+      
+    //mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel",   
+    //                           "Bounds", RectangleValue (Rectangle (-50, 50, -50, 50)));   
+    //mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");  
+    mobility.Install (wifiStaNodes);
+  
+    InternetStackHelper stack;
+    stack.Install (wifiApNode);
+    stack.Install (wifiStaNodes);   
+  
+    Ipv4AddressHelper address;
+  
+    address.SetBase ("10.1.3.0", "255.255.255.0");
+    
+    Ipv4InterfaceContainer apInterfaces;
+    apInterfaces = address.Assign (apDevices); 
+    Ipv4InterfaceContainer wifiInterfaces;
+    wifiInterfaces=address.Assign (staDevices);
+                  
+    //UdpEchoServerHelper echoServer (9);
+    VideoStreamServerHelper videoServer (5000);
+    videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
+    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
+    for(uint m=0; m<nAp; m++)
+    {
+      ApplicationContainer serverApps = videoServer.Install (wifiApNode.Get (m));
+      serverApps.Start (Seconds (0.0));
+      serverApps.Stop (Seconds (100.0));
+    }
+  
+    for(uint k=0; k<nWifi; k++)
+    {
+      VideoStreamClientHelper videoClient (apInterfaces.GetAddress (k), 5000);
+      ApplicationContainer clientApps =
+      videoClient.Install (wifiStaNodes.Get (k));
+      clientApps.Start (Seconds (0.5));
+      clientApps.Stop (Seconds (100.0));
+    }
+  
+    Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+  
+    Simulator::Stop (Seconds (10.0));
+  
+    phy.EnablePcap ("wifi-videoStream", apDevices.Get (0));
+    AnimationInterface anim("wifi-1-3.xml");
+    Simulator::Run ();
+    Simulator::Destroy ();
   }
 
+  fin.close();
   return 0;
 }
