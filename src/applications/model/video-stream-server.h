@@ -79,6 +79,7 @@ class Packet;
       uint32_t m_sent; //!< Counter for sent frames
       uint16_t m_videoLevel; //! Video level
       EventId m_sendEvent; //! Send event used by the client
+      bool m_isRTP; // ! True if Client requires RTP
     } ClientInfo; //! To be compatible with C language
 
     /**

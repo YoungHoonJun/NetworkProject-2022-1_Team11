@@ -141,7 +141,7 @@ main (int argc, char *argv[])
 
     VideoStreamServerHelper videoServer (5000);
     videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
-    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
+    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/frameList.txt"));
     // videoServer.SetAttribute ("FrameSize", UintegerValue (4096));
 
     ApplicationContainer serverApp = videoServer.Install (nodes.Get (0));
@@ -216,7 +216,7 @@ main (int argc, char *argv[])
     //UdpEchoServerHelper echoServer (9);
     VideoStreamServerHelper videoServer (5000);
     videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
-    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
+    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/frameList.txt"));
     for(uint m=0; m<nAp; m++)
     {
       ApplicationContainer serverApps = videoServer.Install (wifiApNode.Get (m));
@@ -305,7 +305,7 @@ main (int argc, char *argv[])
     //UdpEchoServerHelper echoServer (9);
     VideoStreamServerHelper videoServer (5000);
     videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
-    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
+    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/frameList.txt"));
     for(uint m=0; m<nAp; m++)
     {
       ApplicationContainer serverApps = videoServer.Install (wifiApNode.Get (m));
