@@ -13,68 +13,63 @@
 #include "ns3/socket-factory.h"
 #include "ns3/packet.h"
 #include "ns3/uinteger.h"
-#include "ns3/video-stream-server.h"
+#include "ns3/mos-server.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("VideoStreamServerApplication");
+NS_LOG_COMPONENT_DEFINE ("MosServerApplication");
 
-NS_OBJECT_ENSURE_REGISTERED (VideoStreamServer);
+NS_OBJECT_ENSURE_REGISTERED (MosServer);
 
 TypeId
-VideoStreamServer::GetTypeId (void)
+MosServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::VideoStreamServer")
+  static TypeId tid = TypeId ("ns3::MosServer")
     .SetParent<Application> ()
     .SetGroupName("Applications")
-    .AddConstructor<VideoStreamServer> ()
+    .AddConstructor<MosServer> ()
     .AddAttribute ("Interval", "The time to wait between packets",
                     TimeValue (Seconds (0.01)),
-                    MakeTimeAccessor (&VideoStreamServer::m_interval),
+                    MakeTimeAccessor (&MosServer::m_interval),
                     MakeTimeChecker ())
     .AddAttribute ("Port", "Port on which we listen for incoming packets.",
                     UintegerValue (5000),
-                    MakeUintegerAccessor (&VideoStreamServer::m_port),
+                    MakeUintegerAccessor (&MosServer::m_port),
                     MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxPacketSize", "The maximum size of a packet",
                     UintegerValue (1400),
-                    MakeUintegerAccessor (&VideoStreamServer::m_maxPacketSize),
+                    MakeUintegerAccessor (&MosServer::m_maxPacketSize),
                     MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("FrameFile", "The file that contains the video frame sizes",
                     StringValue (""),
-                    MakeStringAccessor (&VideoStreamServer::SetFrameFile, &VideoStreamServer::GetFrameFile),
+                    MakeStringAccessor (&MosServer::SetFrameFile, &MosServer::GetFrameFile),
                     MakeStringChecker ())
-    .AddAttribute ("VideoLength", "The length of the video in seconds",
-                    UintegerValue (60),
-                    MakeUintegerAccessor (&VideoStreamServer::m_videoLength),
-                    MakeUintegerChecker<uint32_t> ())
     ;
     return tid;
 }
 
-VideoStreamServer::VideoStreamServer ()
+MosServer::MosServer ()
 {
   NS_LOG_FUNCTION (this);
   m_socket = 0;
-  m_frameRate = 25;
   m_frameSizeList = std::vector<uint32_t>();
 }
 
-VideoStreamServer::~VideoStreamServer ()
+MosServer::~MosServer ()
 {
   NS_LOG_FUNCTION (this);
   m_socket = 0;
 }
 
 void 
-VideoStreamServer::DoDispose (void)
+MosServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
 }
 
 void
-VideoStreamServer::StartApplication (void)
+MosServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -102,11 +97,11 @@ VideoStreamServer::StartApplication (void)
   }
 
   m_socket->SetAllowBroadcast (true);
-  m_socket->SetRecvCallback (MakeCallback (&VideoStreamServer::HandleRead, this));
+  m_socket->SetRecvCallback (MakeCallback (&MosServer::HandleRead, this));
 }
 
 void
-VideoStreamServer::StopApplication ()
+MosServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -125,8 +120,8 @@ VideoStreamServer::StopApplication ()
   
 }
 
-void 
-VideoStreamServer::SetFrameFile (std::string frameFile)
+void
+MosServer::SetFrameFile (std::string frameFile)
 {
   NS_LOG_FUNCTION (this << frameFile);
   m_frameFile = frameFile;
@@ -144,30 +139,30 @@ VideoStreamServer::SetFrameFile (std::string frameFile)
 }
 
 std::string
-VideoStreamServer::GetFrameFile (void) const
+MosServer::GetFrameFile (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_frameFile;
 }
 
 void
-VideoStreamServer::SetMaxPacketSize (uint32_t maxPacketSize)
+MosServer::SetMaxPacketSize (uint32_t maxPacketSize)
 {
   m_maxPacketSize = maxPacketSize;
 }
 
 uint32_t
-VideoStreamServer::GetMaxPacketSize (void) const
+MosServer::GetMaxPacketSize (void) const
 {
   return m_maxPacketSize;
 }
 
 void 
-VideoStreamServer::Send (uint32_t ipAddress)
+MosServer::Send (uint32_t ipAddress)
 {
   NS_LOG_FUNCTION (this);
 
-  uint32_t frameSize, totalFrames;
+  uint32_t totalFrames;
   ClientInfo *clientInfo = m_clients.at (ipAddress);
 
   //NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server about to send");
@@ -178,54 +173,39 @@ VideoStreamServer::Send (uint32_t ipAddress)
           return;
 	  }
   }
-
+  
 
 
 
   NS_ASSERT (clientInfo->m_sendEvent.IsExpired ());
-  // If the frame sizes are not from the text file, and the list is empty
-  if (m_frameSizeList.empty ())
-  {
-    frameSize = m_frameSizes[clientInfo->m_videoLevel];
-    totalFrames = m_videoLength * m_frameRate;
-  }
-  else
-  {
-    frameSize = m_frameSizeList[clientInfo->m_sent] * clientInfo->m_videoLevel;
-    totalFrames = m_frameSizeList.size ();
-  }
-
-  // the frame might require several packets to send
-  for (uint i = 0; i < frameSize / m_maxPacketSize; i++)
-  {
-    SendPacket (clientInfo, m_maxPacketSize);
-  }
-  uint32_t remainder = frameSize % m_maxPacketSize;
-  SendPacket (clientInfo, remainder);
-
-  NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server sent frame " << clientInfo->m_sent << " and " << frameSize << " bytes to " << InetSocketAddress::ConvertFrom (clientInfo->m_address).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (clientInfo->m_address).GetPort ());
+  totalFrames = m_frameSizeList.size ();
+  
+  // long line packet dividing function would be needed
+  SendPacket (clientInfo, m_maxPacketSize, (char*)"www");
+  
 
   clientInfo->m_sent += 1;
-  if (clientInfo->m_sent < totalFrames)
-  {
-    clientInfo->m_sendEvent = Simulator::Schedule (m_interval, &VideoStreamServer::Send, this, ipAddress);
-  }
+  //if (clientInfo->m_sent < totalFrames)
+  //{
+    clientInfo->m_sendEvent = Simulator::Schedule (m_interval, &MosServer::Send, this, ipAddress);
+  //}
 }
 
 void 
-VideoStreamServer::SendPacket (ClientInfo *client, uint32_t packetSize)
+MosServer::SendPacket (ClientInfo *client, uint32_t packetSize, char* targetLine)
 {
   uint8_t dataBuffer[packetSize];
-  sprintf ((char *) dataBuffer, "%u", client->m_sent);
+  sprintf ((char*)dataBuffer, "%s", targetLine);
   Ptr<Packet> p = Create<Packet> (dataBuffer, packetSize);
   if (m_socket->SendTo (p, 0, client->m_address) < 0)
   {
     NS_LOG_INFO ("Error while sending " << packetSize << "bytes to " << InetSocketAddress::ConvertFrom (client->m_address).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (client->m_address).GetPort ());
   }
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s SEVER SEND" << dataBuffer);
 }
 
 void 
-VideoStreamServer::HandleRead (Ptr<Socket> socket)
+MosServer::HandleRead (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -237,7 +217,12 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
     socket->GetSockName (localAddress);
     if (InetSocketAddress::IsMatchingType (from))
     {
-      NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received " << packet->GetSize () << " bytes from " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+	  NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received " << packet->GetSize () << " bytes from " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+
+	  // uint8_t recvData[packet->GetSize()];
+	  // packet->CopyData (recvData, packet->GetSize());
+	  // printf(recvData);
+	  //// now, just server send the data "wwww"
 
       uint32_t ipAddr = InetSocketAddress::ConvertFrom (from).GetIpv4 ().Get ();
 
@@ -246,34 +231,24 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
       {
         ClientInfo *newClient = new ClientInfo();
         newClient->m_sent = 0;
-        newClient->m_videoLevel = 3;
         newClient->m_address = from;
-        newClient->m_sendEvent = EventId ();
+        // newClient->m_sendEvent = EventId ();
         m_clients[ipAddr] = newClient;
-        newClient->m_sendEvent = Simulator::Schedule (Seconds (0.0), &VideoStreamServer::Send, this, ipAddr);
+        newClient->m_sendEvent = Simulator::Schedule (Seconds (0.0), &MosServer::Send, this, ipAddr);
 		
 		m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
       }
       else
       {
-		m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
+		m_lastTime. at(ipAddr) = Simulator::Now ().GetSeconds ();
 
-        uint8_t dataBuffer[10];
-        packet->CopyData (dataBuffer, 10);
+        //uint8_t dataBuffer[10];
+        //packet->CopyData (dataBuffer, 10);
 
-        uint16_t videoLevel;
-        sscanf((char *) dataBuffer, "%hu", &videoLevel);
-
-		if (videoLevel == (unsigned short int) 10){		// if it is alive signal
-		  return;		//do nothing
-		}
-		if (videoLevel == (unsigned short int) 11){		// if it is death signal
-		  Simulator::Cancel(m_clients.at(ipAddr)->m_sendEvent);		//stop sending
-		}
-		
-        NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received video level " << videoLevel);
-
-        m_clients.at (ipAddr)->m_videoLevel = videoLevel;
+        //uint16_t videoLevel;
+        //sscanf((char *) dataBuffer, "%hu", &videoLevel);
+        // NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received video level " << videoLevel);
+        //m_clients.at (ipAddr)->m_videoLevel = videoLevel;
       }
     }
   }

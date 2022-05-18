@@ -110,7 +110,7 @@ VideoStreamClient::StartApplication (void)
       m_socket->Connect (m_peerAddress);
     }
     else if (InetSocketAddress::IsMatchingType (m_peerAddress) == true)
-    {
+	{  
       if (m_socket->Bind () == -1)
       {
         NS_FATAL_ERROR ("Failed to bind socket");
@@ -143,6 +143,12 @@ VideoStreamClient::StopApplication ()
 
   if (m_socket != 0)
   {
+	// sending 11 means client quits
+	uint8_t dataBuffer[10];
+	sprintf((char*) dataBuffer, "%hu", (unsigned short int) 11);
+	Ptr <Packet> lastPacket = Create<Packet> (dataBuffer, 10);
+	m_socket->Send(lastPacket);
+
     m_socket->Close ();
     m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket>> ());
     m_socket = 0;
@@ -252,6 +258,8 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
       packet->CopyData (recvData, packet->GetSize ());
       uint32_t frameNum;
       sscanf ((char *) recvData, "%u", &frameNum);
+		
+	  
 
       if (frameNum == m_lastRecvFrame)
       {
@@ -263,6 +271,11 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
         {
           NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client received frame " << frameNum-1 << " and " << m_frameSize << " bytes from " <<  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
         }
+		// sending 10 means the client is still alive
+		uint8_t dataBuffer[10];
+		sprintf((char*) dataBuffer, "%hu", (unsigned short int) 10);
+		Ptr<Packet> alivePacket = Create<Packet> (dataBuffer, 10);
+		socket->SendTo (alivePacket, 0, from);
 
         m_currentBufferSize++;
         m_lastRecvFrame = frameNum;
@@ -304,6 +317,4 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
   }
 }
 
-
 } // namespace ns3
-

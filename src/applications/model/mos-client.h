@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
-#ifndef VIDEO_STREAM_CLIENT_H
-#define VIDEO_STREAM_CLIENT_H
+#ifndef MOS_CLIENT_H
+#define MOS_CLIENT_H
 
 #include "ns3/application.h"
 #include "ns3/event-id.h"
@@ -9,7 +9,6 @@
 #include "ns3/address.h"
 #include "ns3/traced-callback.h"
 
-#define MAX_VIDEO_LEVEL 6
 
 namespace ns3 {
 
@@ -19,7 +18,7 @@ class Packet;
 /**
  * @brief A Video Stream Client
  */
-class VideoStreamClient : public Application
+class MosClient : public Application
 {
 public:
 /**
@@ -28,8 +27,8 @@ public:
  * @return the object TypeId
  */
   static TypeId GetTypeId (void);
-  VideoStreamClient ();
-  virtual ~VideoStreamClient ();
+  MosClient ();
+  virtual ~MosClient ();
 
   /**
    * @brief Set the server address and port.
@@ -51,7 +50,6 @@ protected:
 private: 
   virtual void StartApplication (void);
   virtual void StopApplication (void);
-  virtual void ChangeServer(Address s_ip, uint16_t s_port);
   /**
    * @brief Send the packet to the remote server.
    */
@@ -63,7 +61,7 @@ private:
    * 
    * @return the updated buffer size (-1 if the buffer size is smaller than the fps)
    */
-  uint32_t ReadFromBuffer (void);
+  
 
   /**
    * @brief Handle a packet reception.
@@ -90,9 +88,8 @@ private:
 
   EventId m_bufferEvent; //!< Event to read from the buffer
   EventId m_sendEvent; //!< Event to send data to the server
-
 };
 
 } // namespace ns3
 
-#endif /* VIDEO_STREAM_CLIENT_H */
+#endif /* MOS_CLIENT_H */
