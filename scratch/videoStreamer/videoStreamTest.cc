@@ -48,17 +48,14 @@ main (int argc, char *argv[])
 	NodeContainer n0n1 = NodeContainer(nodes.Get(0), nodes.Get(1));
 	NodeContainer n0n2 = NodeContainer(nodes.Get(0), nodes.Get(2));
 
-
     PointToPointHelper pointToPoint;
     pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
     pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
-
 
     NetDeviceContainer devices_0;
 	NetDeviceContainer devices_1;
     devices_0 = pointToPoint.Install (n0n1);
 	devices_1 = pointToPoint.Install (n0n2);
-
 
     InternetStackHelper stack;
     stack.Install (nodes);
@@ -83,7 +80,6 @@ main (int argc, char *argv[])
 	clientApp_2.Stop (Seconds (10.0));
 
 
-
     VideoStreamServerHelper videoServer (5000);
     videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
     videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/frameList.txt"));
@@ -101,7 +97,6 @@ main (int argc, char *argv[])
 
     pointToPoint.EnablePcap ("videoStream", devices_0.Get(1), false);
 	pointToPoint.EnablePcap ("videoStream", devices_1.Get(1), false);
-
     Simulator::Run ();
     Simulator::Destroy ();
   }
