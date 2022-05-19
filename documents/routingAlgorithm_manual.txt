@@ -1,0 +1,7 @@
+라우팅 알고리즘 파트에 대한 설명입니다
+
+1. Dijkstra Algorithm
+
+2. Connection (Wi-Fi)
+
+3. Connection (P2P)
