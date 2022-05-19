@@ -12,6 +12,8 @@
 
 #include <fstream>
 #include <unordered_map>
+#include <deque>
+
 namespace ns3 {
 
 class Socket;
@@ -79,7 +81,10 @@ class Packet;
       uint32_t m_sent; //!< Counter for sent frames
       uint16_t m_videoLevel; //! Video level
       EventId m_sendEvent; //! Send event used by the client
-      bool m_isRTP; // ! True if Client requires RTP
+      //below members are for RTP
+      bool m_isRTP; //! True if Client requires RTP
+      uint32_t m_lastSeq; //! Last sent sequence for RTP
+      std::deque<Packet>* m_queue; //! Queue for sent packet
     } ClientInfo; //! To be compatible with C language
 
     /**

@@ -14,6 +14,7 @@
 #include "ns3/packet.h"
 #include "ns3/uinteger.h"
 #include "ns3/video-stream-server.h"
+#include "ns3/rtp-header.h"
 
 namespace ns3 {
 
@@ -180,8 +181,6 @@ VideoStreamServer::Send (uint32_t ipAddress)
   }
 
 
-
-
   NS_ASSERT (clientInfo->m_sendEvent.IsExpired ());
   // If the frame sizes are not from the text file, and the list is empty
   if (m_frameSizeList.empty ())
@@ -218,6 +217,14 @@ VideoStreamServer::SendPacket (ClientInfo *client, uint32_t packetSize)
   uint8_t dataBuffer[packetSize];
   sprintf ((char *) dataBuffer, "%u", client->m_sent);
   Ptr<Packet> p = Create<Packet> (dataBuffer, packetSize);
+  if(client->m_isRTP)
+  {
+    client->m_lastSeq += 1;
+    RtpHeader hdr;
+    hdr.SetSquence(client->m_lastSeq);
+    p->AddHeader(hdr);
+    //TODO: 해당 패킷 큐에 저장하는 작업도 필요.
+  }
   if (m_socket->SendTo (p, 0, client->m_address) < 0)
   {
     NS_LOG_INFO ("Error while sending " << packetSize << "bytes to " << InetSocketAddress::ConvertFrom (client->m_address).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (client->m_address).GetPort ());
@@ -251,25 +258,55 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
         newClient->m_sendEvent = EventId ();
         m_clients[ipAddr] = newClient;
         newClient->m_sendEvent = Simulator::Schedule (Seconds (0.0), &VideoStreamServer::Send, this, ipAddr);
+        newClient->m_lastSeq = 0;
+
+        // read first got packet to determine it is RTP client or not.
+        uint8_t dataBuffer[10];
+        packet->CopyData (dataBuffer, 10);
+        uint16_t det;
+        sscanf((char *) dataBuffer, "%hu", &det);
+        if (det == 0)
+          newClient->m_isRTP = false;
+        else if (det == 1)
+        {
+          newClient->m_isRTP = true;
+          newClient->m_queue = new std::deque<Packet>;
+        }
 		
-		m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
+		    m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
       }
       else
       {
-		m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
+        ClientInfo *currentClient = m_clients.at(ipAddr);
+		    m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
 
+        uint32_t lostSeq = 0;
+        if(currentClient->m_isRTP)
+        {
+          RtpHeader hdr;
+          packet->RemoveHeader(hdr);
+          lostSeq = hdr.GetSquence();
+
+          if(lostSeq > 0)
+          {
+            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server retransmit lost sequence " << lostSeq << " to " << ipAddr);
+            currentClient
+          }
+          
+
+        }
         uint8_t dataBuffer[10];
         packet->CopyData (dataBuffer, 10);
 
         uint16_t videoLevel;
         sscanf((char *) dataBuffer, "%hu", &videoLevel);
 
-		if (videoLevel == (unsigned short int) 10){		// if it is alive signal
-		  return;		//do nothing
-		}
-		if (videoLevel == (unsigned short int) 11){		// if it is death signal
-		  Simulator::Cancel(m_clients.at(ipAddr)->m_sendEvent);		//stop sending
-		}
+        if (videoLevel == (unsigned short int) 10){		// if it is alive signal
+          return;		//do nothing
+        }
+        if (videoLevel == (unsigned short int) 11){		// if it is death signal
+          Simulator::Cancel(m_clients.at(ipAddr)->m_sendEvent);		//stop sending
+        }
 		
         NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received video level " << videoLevel);
 

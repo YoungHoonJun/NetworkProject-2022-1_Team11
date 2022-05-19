@@ -44,6 +44,12 @@ public:
    * @param addr server address
    */
   void SetRemote (Address addr);
+  /**
+   * @brief Set the client to use RTP.
+   * 
+   * @param void
+   */
+  void SetRTP (uint16_t is_rtp);
 
 protected:
   virtual void DoDispose (void);
@@ -90,6 +96,7 @@ private:
 
   EventId m_bufferEvent; //!< Event to read from the buffer
   EventId m_sendEvent; //!< Event to send data to the server
+  bool m_isRTP; //!< True if Client is using Real-time protocol
 
 };
 

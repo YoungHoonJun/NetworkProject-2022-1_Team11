@@ -35,7 +35,10 @@ VideoStreamClient::GetTypeId (void)
                     UintegerValue (5000),
                     MakeUintegerAccessor (&VideoStreamClient::m_peerPort),
                     MakeUintegerChecker<uint16_t> ())
-    
+    .AddAttribute ("IsRTP", "1 if the client wants to use RTP",
+                    UintegerValue(0),
+                    MakeUintegerAccessor (&VideoStreamClient::SetRTP),
+                    MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }
@@ -54,6 +57,7 @@ VideoStreamClient::VideoStreamClient ()
   m_rebufferCounter = 0;
   m_bufferEvent = EventId();
   m_sendEvent = EventId();
+  m_isRTP = false;
 }
 
 VideoStreamClient::~VideoStreamClient ()
@@ -75,6 +79,16 @@ VideoStreamClient::SetRemote (Address addr)
 {
   NS_LOG_FUNCTION (this << addr);
   m_peerAddress = addr;
+}
+
+void
+VideoStreamClient::SetRTP (uint16_t is_rtp)
+{
+  NS_LOG_FUNCTION (this << is_rtp);
+  if (is_rtp == 1)
+    m_isRTP = true;
+  else
+    m_isRTP = false;
 }
 
 void
@@ -174,7 +188,12 @@ VideoStreamClient::Send (void)
   NS_ASSERT (m_sendEvent.IsExpired ());
 
   uint8_t dataBuffer[10];
-  sprintf((char *) dataBuffer, "%hu", (unsigned short int)0);
+
+  uint8_t sig = 0;
+  if(m_isRTP) // rtp client라는 것을 1 signal로 서버에 알림.
+    sig = 1;
+
+  sprintf((char *) dataBuffer, "%hu", (unsigned short int)sig);
   Ptr<Packet> firstPacket = Create<Packet> (dataBuffer, 10);
   m_socket->Send (firstPacket);
 

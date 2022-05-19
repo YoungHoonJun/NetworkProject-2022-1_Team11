@@ -5,9 +5,7 @@
 
 #include <stdint.h>
 #include "ns3/header.h"
-#include "ns3/tcp-option.h"
 #include "ns3/buffer.h"
-#include "ns3/sequence-number.h"
 
 namespace ns3 {
 
