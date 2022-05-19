@@ -49,9 +49,20 @@ public:
    * \return the sequence number for this RtpHeader
    */
   uint32_t GetSquence (void) const;
+  /**
+   * \brief Set the last sequence number of the frame
+   * \param sequence the last sequence number of the frame for this RtpHeader
+   */
+  void SetLastFrameSquence (uint32_t lastFrameSequence);
+  /**
+   * \brief Get the last sequence number of the frame
+   * \return the last sequence number of the frame for this RtpHeader
+   */
+  uint32_t GetLastFrameSquence (void) const;
 
 private:
   uint32_t m_sequence; //!< Sequence number
+  uint32_t m_lastFrameSequence; //!< Last sequence number of the frame
 };
 
 } // namespace ns3
