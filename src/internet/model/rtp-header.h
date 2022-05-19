@@ -13,7 +13,8 @@ namespace ns3 {
  * @brief A RTP(Real-time protocol)-like streaming Header
  * 
  * This class is simple RTP-like header
- * only checking sequence of sent/received each packet
+ * Transmit sequence of sent/received each packet
+ * and the last sequence number of the frame
  * 
  */
 class RtpHeader : public Header
@@ -51,7 +52,7 @@ public:
   uint32_t GetSquence (void) const;
   /**
    * \brief Set the last sequence number of the frame
-   * \param sequence the last sequence number of the frame for this RtpHeader
+   * \param lastFrameSequence the last sequence number of the frame for this RtpHeader
    */
   void SetLastFrameSquence (uint32_t lastFrameSequence);
   /**

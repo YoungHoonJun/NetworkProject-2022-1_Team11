@@ -114,7 +114,7 @@ VideoStreamServer::StopApplication ()
 
   if (m_socket != 0)
   {
-    m_socket->Close();
+    m_socket->Close ();
     m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket>> ());
     m_socket = 0;
   }
@@ -134,10 +134,10 @@ VideoStreamServer::SetFrameFile (std::string frameFile)
   if (frameFile != "")
   {
     std::string line;
-    std::ifstream fileStream(frameFile);
+    std::ifstream fileStream (frameFile);
     while (std::getline (fileStream, line))
     {
-      int result = std::stoi(line);
+      int result = std::stoi (line);
       m_frameSizeList.push_back (result);
     }
   }
@@ -172,10 +172,10 @@ VideoStreamServer::Send (uint32_t ipAddress)
   ClientInfo *clientInfo = m_clients.at (ipAddress);
 
   //NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server about to send");
-  if (m_lastTime.find(ipAddress) != m_lastTime.end()){ //that ip has time log
+  if (m_lastTime.find (ipAddress) != m_lastTime.end ()){ //that ip has time log
 	  double lastTime = m_lastTime.at (ipAddress);
-	  if (Simulator::Now().GetSeconds() - lastTime > 3.0){
-		  Simulator::Cancel(clientInfo->m_sendEvent);
+	  if (Simulator::Now ().GetSeconds () - lastTime > 3.0){
+		  Simulator::Cancel (clientInfo->m_sendEvent);
           return;
 	  }
   }
@@ -195,6 +195,8 @@ VideoStreamServer::Send (uint32_t ipAddress)
   }
 
   // the frame might require several packets to send
+
+  // if the client requires RTP, last info of last seq for the frame is needed.
   if (clientInfo->m_isRTP)
   {
     clientInfo->m_FrameLastSeq += (frameSize / m_maxPacketSize) + 1;
@@ -222,7 +224,7 @@ VideoStreamServer::SendPacket (ClientInfo *client, uint32_t packetSize)
   uint8_t dataBuffer[packetSize];
   sprintf ((char *) dataBuffer, "%u", client->m_sent);
   Ptr<Packet> p = Create<Packet> (dataBuffer, packetSize);
-  if(client->m_isRTP)
+  if (client->m_isRTP)
   {
     client->m_lastSeq += 1;
     RtpHeader hdr;
@@ -230,7 +232,7 @@ VideoStreamServer::SendPacket (ClientInfo *client, uint32_t packetSize)
     hdr.SetLastFrameSquence (client->m_FrameLastSeq);
     p->AddHeader (hdr);
     client->m_queue->push_back (*p);
-    while(client->m_queue->size () > m_maxRtpQueueLen)
+    while (client->m_queue->size () > m_maxRtpQueueLen)
     {
       client->m_queue->pop_front ();
     }
@@ -261,7 +263,7 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
       // the first time we received the message from the client
       if (m_clients.find (ipAddr) == m_clients.end ())
       {
-        ClientInfo *newClient = new ClientInfo();
+        ClientInfo *newClient = new ClientInfo ();
         newClient->m_sent = 0;
         newClient->m_videoLevel = 3;
         newClient->m_address = from;
@@ -274,7 +276,7 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
         uint8_t dataBuffer[10];
         packet->CopyData (dataBuffer, 10);
         uint16_t det;
-        sscanf((char *) dataBuffer, "%hu", &det);
+        sscanf ((char *) dataBuffer, "%hu", &det);
         if (det == 0)
           newClient->m_isRTP = false;
         else if (det == 1)
@@ -288,26 +290,26 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
       }
       else
       {
-        ClientInfo *currentClient = m_clients.at(ipAddr);
+        ClientInfo *currentClient = m_clients.at (ipAddr);
 		    m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
 
         uint32_t lostSeq = 0;
-        if(currentClient->m_isRTP)
+        if (currentClient->m_isRTP)
         {
           RtpHeader hdr;
-          packet->RemoveHeader(hdr);
-          lostSeq = hdr.GetSquence();
+          packet->RemoveHeader (hdr);
+          lostSeq = hdr.GetSquence ();
 
           if(lostSeq > 0)
           {
             RtpHeader pivHdr;
-            std::list<Packet>::iterator iter = currentClient->m_queue->begin();
-            iter->PeekHeader(pivHdr);
+            std::list<Packet>::iterator iter = currentClient->m_queue->begin ();
+            iter->PeekHeader (pivHdr);
 
-            while (pivHdr.GetSquence() < lostSeq)
+            while (pivHdr.GetSquence () < lostSeq)
             {
               iter ++;
-              iter->PeekHeader(pivHdr);
+              iter->PeekHeader (pivHdr);
             }
 
             Packet retransPacket = *iter;
