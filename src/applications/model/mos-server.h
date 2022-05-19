@@ -35,20 +35,6 @@ class Packet;
     virtual ~MosServer ();
 
     /**
-     * @brief Set the name of the file containing the frame sizes.
-     * 
-      * @param frameFile the file name
-     */
-    void SetFrameFile (std::string frameFile);
-
-    /**
-     * @brief Get the name of the file containing the frame sizes.
-     * 
-     * @return the file name 
-     */
-    std::string GetFrameFile (void) const;
-
-    /**
      * @brief Set the maximum packet size.
      * 
      * @param maxPacketSize the largest number of bytes a packet can be
@@ -78,14 +64,12 @@ class Packet;
       Address m_address; //!< Address
       uint32_t m_sent; //!< Counter for sent frames
       EventId m_sendEvent; //! Send event used by the client
+	  EventId m_recieveEvent;
+      std::vector <std::string> m_textContainer;
     } ClientInfo; //! To be compatible with C language
 
-    /**
-     * @brief Send a packet with specified size.
-     * 
-     * @param packetSize the number of bytes for the packet to be sent
-     */
-    void SendPacket (ClientInfo *client, uint32_t packetSize, char* targetLine);
+    
+    void SendByTime (uint32_t ipAddress, uint8_t* morseList, uint16_t cnt);
     
     /**
      * @brief Send the video frame to the given ipv4 address.
@@ -94,13 +78,7 @@ class Packet;
      */
     void Send (uint32_t ipAddress);
 
-    /**
-     * @brief Handle a packet reception.
-     * 
-     * This function is called by lower layers.
-     * 
-     * @param socket the socket the packet was received to
-     */
+	void WriteBuffer(uint8_t* textBuffer, uint32_t ipAddr);
     void HandleRead (Ptr<Socket> socket);
 
     Time m_interval; //!< Packet inter-send time
@@ -110,12 +88,9 @@ class Packet;
     uint16_t m_port; //!< The port 
     Address m_local; //!< Local multicast address
 
-    std::string m_frameFile; //!< Name of the file containing frame sizes
     std::vector<uint32_t> m_frameSizeList; //!< List of video frame sizes
-    
+
     std::unordered_map<uint32_t, ClientInfo*> m_clients; //!< Information saved for each client
-	std::unordered_map<uint32_t, double> m_lastTime; //!< Time when recieved last packet for each client
-	//std::unordered_map<uint32_t, Client
   };
 
 } // namespace ns3
