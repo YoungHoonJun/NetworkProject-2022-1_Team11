@@ -223,7 +223,11 @@ VideoStreamServer::SendPacket (ClientInfo *client, uint32_t packetSize)
     RtpHeader hdr;
     hdr.SetSquence(client->m_lastSeq);
     p->AddHeader(hdr);
-    //TODO: 해당 패킷 큐에 저장하는 작업도 필요.
+    client->m_queue->push(*p);
+    while(client->m_queue->size() > m_maxRtpQueueLen)
+    {
+      client->m_queue->pop();
+    }
   }
   if (m_socket->SendTo (p, 0, client->m_address) < 0)
   {
@@ -270,7 +274,8 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
         else if (det == 1)
         {
           newClient->m_isRTP = true;
-          newClient->m_queue = new std::deque<Packet>;
+          m_maxRtpQueueLen = 500;
+          newClient->m_queue = new std::queue<Packet>;
         }
 		
 		    m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
@@ -289,11 +294,21 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
 
           if(lostSeq > 0)
           {
-            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server retransmit lost sequence " << lostSeq << " to " << ipAddr);
-            currentClient
-          }
-          
+            Packet popPacket;
+            RtpHeader popHdr;
+            do{
+              popPacket = currentClient->m_queue->front();
+              currentClient->m_queue->pop();
+              popPacket.PeekHeader(popHdr);
+            }while(popHdr.GetSquence() == lostSeq);
 
+            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server retransmit lost sequence " << lostSeq << " to " << ipAddr);
+            if (m_socket->SendTo (&popPacket, 0, currentClient->m_address) < 0)
+            {
+              NS_LOG_INFO ("Error while retransmit seq " << lostSeq << " to " << ipAddr);
+            }
+            return;
+          }
         }
         uint8_t dataBuffer[10];
         packet->CopyData (dataBuffer, 10);
@@ -305,7 +320,11 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
           return;		//do nothing
         }
         if (videoLevel == (unsigned short int) 11){		// if it is death signal
-          Simulator::Cancel(m_clients.at(ipAddr)->m_sendEvent);		//stop sending
+          Simulator::Cancel (currentClient->m_sendEvent);		//stop sending
+          m_clients.erase (ipAddr);
+          delete currentClient->m_queue;
+          delete currentClient;
+          return;
         }
 		
         NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received video level " << videoLevel);

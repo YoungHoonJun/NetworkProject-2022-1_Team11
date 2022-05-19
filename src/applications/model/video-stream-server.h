@@ -13,6 +13,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <deque>
+#include <queue>
 
 namespace ns3 {
 
@@ -84,7 +85,7 @@ class Packet;
       //below members are for RTP
       bool m_isRTP; //! True if Client requires RTP
       uint32_t m_lastSeq; //! Last sent sequence for RTP
-      std::deque<Packet>* m_queue; //! Queue for sent packet
+      std::queue<Packet>* m_queue; //! Queue for sent packet
     } ClientInfo; //! To be compatible with C language
 
     /**
@@ -109,6 +110,8 @@ class Packet;
      * @param socket the socket the packet was received to
      */
     void HandleRead (Ptr<Socket> socket);
+
+    uint32_t m_maxRtpQueueLen; //!< Maximum packet queue size for RTP 
 
     Time m_interval; //!< Packet inter-send time
     uint32_t m_maxPacketSize; //!< Maximum size of the packet to be sent
