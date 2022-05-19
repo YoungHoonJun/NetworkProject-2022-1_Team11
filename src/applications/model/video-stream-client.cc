@@ -13,6 +13,7 @@
 #include "ns3/uinteger.h"
 #include "ns3/trace-source-accessor.h"
 #include "video-stream-client.h"
+#include "ns3/rtp-header.h"
 
 namespace ns3 {
 
@@ -57,6 +58,9 @@ VideoStreamClient::VideoStreamClient ()
   m_rebufferCounter = 0;
   m_bufferEvent = EventId();
   m_sendEvent = EventId();
+  m_reReqDelay = 100;
+  m_minSeq = 1;
+  m_maxSeq = 0;
   m_isRTP = false;
 }
 
@@ -86,7 +90,9 @@ VideoStreamClient::SetRTP (uint16_t is_rtp)
 {
   NS_LOG_FUNCTION (this << is_rtp);
   if (is_rtp == 1)
+  {
     m_isRTP = true;
+  }
   else
     m_isRTP = false;
 }
@@ -157,12 +163,18 @@ VideoStreamClient::StopApplication ()
 
   if (m_socket != 0)
   {
-	// sending 11 means client quits
-	uint8_t dataBuffer[10];
-	sprintf((char*) dataBuffer, "%hu", (unsigned short int) 11);
-	Ptr <Packet> lastPacket = Create<Packet> (dataBuffer, 10);
-	m_socket->Send(lastPacket);
+    // sending 11 means client quits
+    uint8_t dataBuffer[10];
+    sprintf((char*) dataBuffer, "%hu", (unsigned short int) 11);
+    Ptr<Packet> lastPacket = Create<Packet> (dataBuffer, 10);
 
+    if (m_isRTP)
+    {
+      RtpHeader hdr;
+      lastPacket->AddHeader(hdr);
+    }
+
+    m_socket->Send (lastPacket);
     m_socket->Close ();
     m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket>> ());
     m_socket = 0;
@@ -273,33 +285,126 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
     socket->GetSockName (localAddress);
     if (InetSocketAddress::IsMatchingType (from))
     {
-      uint8_t recvData[packet->GetSize()];
-      packet->CopyData (recvData, packet->GetSize ());
-      uint32_t frameNum;
-      sscanf ((char *) recvData, "%u", &frameNum);
-		
-	  
-
-      if (frameNum == m_lastRecvFrame)
+      uint32_t  recvSeq, recvLastSeq;
+      if (m_isRTP)
       {
-        m_frameSize += packet->GetSize ();
+        RtpHeader hdr;
+        packet->RemoveHeader (hdr);
+        recvSeq = hdr.GetSquence ();
+        recvLastSeq = hdr.GetLastFrameSquence ();
+
+        // missing packet entered, then pop
+        if (m_missingQueue.count(recvSeq) != 0)
+        {
+          m_missingQueue.erase(recvSeq);
+        }
+
+        // if empty or never pushed, push it. (it only pushed on ascending order.)
+        if (m_lastSeqQueue.empty () || m_lastSeqQueue.back () < recvLastSeq)
+          m_lastSeqQueue.push(recvLastSeq);
+
+        // if passed frame's seqence came in, do nothing.
+        if (recvSeq >= m_minSeq)
+          m_packetBuffer[recvSeq] = *packet;
+        else
+          return;
+
+        if (m_maxSeq < recvSeq)
+        {
+          m_maxSeq = recvSeq;
+        }
+
+        uint32_t target = m_lastSeqQueue.front ();
+
+        // if maximum recved seq > least final seq for frame
+        if (target < m_maxSeq)
+        {
+          // check whether it is complete
+          bool complete = true;
+          for (uint32_t i = m_minSeq; i <= target; i ++)
+          {
+            // if missing seq found, mark incomplete, and push missing seq into missing queue
+            if (m_packetBuffer.count (i) == 0)
+            {
+              complete = false;
+              if (m_missingQueue.count (i) == 0)
+                m_missingQueue[i] = Simulator::Now ().GetMicroSeconds();
+            }
+          }
+          // if it is complete, add up the frame.
+          if (complete)
+          {
+            uint32_t frameNum;
+            for (uint32_t i = m_minSeq; i <= target; i ++)
+            {
+              Packet p = m_packetBuffer.at (i);
+              uint8_t recvData[p.GetSize ()];
+              p.CopyData (recvData, p.GetSize ());
+              sscanf ((char *) recvData, "%u", &frameNum);
+              m_frameSize += p.GetSize ();
+              m_packetBuffer.erase (i);
+            }
+            
+            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client received frame " << frameNum << " and " << m_frameSize << " bytes from " <<  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+        
+            m_currentBufferSize++;
+            m_frameSize = 0;
+            m_minSeq = target+1;
+            m_lastSeqQueue.pop ();
+          }
+        }
       }
       else
       {
-        if (frameNum > 0)
+        uint8_t recvData[packet->GetSize ()];
+        packet->CopyData (recvData, packet->GetSize ());
+        uint32_t frameNum;
+        sscanf ((char *) recvData, "%u", &frameNum);
+    
+        if (frameNum == m_lastRecvFrame)
         {
-          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client received frame " << frameNum-1 << " and " << m_frameSize << " bytes from " <<  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+          m_frameSize += packet->GetSize ();
         }
-		// sending 10 means the client is still alive
-		uint8_t dataBuffer[10];
-		sprintf((char*) dataBuffer, "%hu", (unsigned short int) 10);
-		Ptr<Packet> alivePacket = Create<Packet> (dataBuffer, 10);
-		socket->SendTo (alivePacket, 0, from);
-
-        m_currentBufferSize++;
-        m_lastRecvFrame = frameNum;
-        m_frameSize = packet->GetSize ();
+        else
+        {
+          if (frameNum > 0)
+          {
+            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client received frame " << frameNum-1 << " and " << m_frameSize << " bytes from " <<  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+          }
+          
+          m_currentBufferSize++;
+          m_lastRecvFrame = frameNum;
+          m_frameSize = packet->GetSize ();
+        }
       }
+
+      // sending 10 means the client is still alive
+      uint8_t dataBuffer[10];
+      sprintf ((char*) dataBuffer, "%hu", (unsigned short int) 10);
+      Ptr<Packet> alivePacket = Create<Packet> (dataBuffer, 10);
+
+      // send retransmit request with alive signal
+      if (m_isRTP)
+      {
+        RtpHeader hdr;
+        uint32_t wantToRetrans;
+        if (!m_missingQueue.empty ())
+        {
+          std::map<uint32_t, int64_t> :: iterator iter = m_missingQueue.begin ();
+          wantToRetrans = iter->first;
+          if (Simulator::Now ().GetMicroSeconds () > iter->second + m_reReqDelay)
+          {
+            hdr.SetSquence (wantToRetrans);
+            iter->second = Simulator::Now ().GetMicroSeconds ();
+          }
+        }
+
+        alivePacket->AddHeader (hdr);
+        NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client requested to retransmit seq " << wantToRetrans << " to " <<  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+          
+      }
+
+      socket->SendTo (alivePacket, 0, from);
 
       // The rebuffering event has happend 3+ times, which suggest the client to lower the video quality.
       if (m_rebufferCounter >= 3)
@@ -312,6 +417,13 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
           uint8_t dataBuffer[10];
           sprintf((char *) dataBuffer, "%hu", m_videoLevel);
           Ptr<Packet> levelPacket = Create<Packet> (dataBuffer, 10);
+
+          if (m_isRTP)
+          {
+            RtpHeader hdr;
+            levelPacket->AddHeader(hdr);
+          }
+
           socket->SendTo (levelPacket, 0, from);
           m_rebufferCounter = 0;
         }
@@ -327,6 +439,13 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
           uint8_t dataBuffer[10];
           sprintf((char *) dataBuffer, "%hu", m_videoLevel);
           Ptr<Packet> levelPacket = Create<Packet> (dataBuffer, 10);
+
+          if (m_isRTP)
+          {
+            RtpHeader hdr;
+            levelPacket->AddHeader(hdr);
+          }
+
           socket->SendTo (levelPacket, 0, from);
           m_currentBufferSize = m_frameRate;
           NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds() << "s: Increase the video quality level to " << m_videoLevel);

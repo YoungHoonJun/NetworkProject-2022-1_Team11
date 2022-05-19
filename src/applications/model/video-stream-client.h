@@ -9,6 +9,9 @@
 #include "ns3/address.h"
 #include "ns3/traced-callback.h"
 
+#include <map>
+#include <queue>
+
 #define MAX_VIDEO_LEVEL 6
 
 namespace ns3 {
@@ -96,6 +99,13 @@ private:
 
   EventId m_bufferEvent; //!< Event to read from the buffer
   EventId m_sendEvent; //!< Event to send data to the server
+  // below are for RTP implementation
+  int64_t m_reReqDelay; // !< re-Request delay for retransmition (us)
+  uint32_t m_minSeq; //!< min seq on packetBuffer
+  uint32_t m_maxSeq; //!< max seq on packetBuffer
+  std::queue<uint32_t> m_lastSeqQueue; //!< last seq num of each frame
+  std::map<uint32_t, int64_t> m_missingQueue; //!< last seq num of each frame
+  std::map<uint32_t, Packet> m_packetBuffer; //!< Packet buffer for RTP (key = seq num.)
   bool m_isRTP; //!< True if Client is using Real-time protocol
 
 };
