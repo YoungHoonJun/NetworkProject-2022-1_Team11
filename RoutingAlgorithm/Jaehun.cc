@@ -33,6 +33,7 @@ vector<pair<int, int>> graph[100'001];
 
 // 최단 거리 테이블 만들기
 int d[100'001];
+int route[100'001];
 
 void dijkstra(int start) {
     priority_queue<pair<int, int>> pq; 
@@ -56,12 +57,15 @@ void dijkstra(int start) {
 
         // 현재 노드와 연결된 다른 인접 노드들을 확인
         for (int i = 0; i < graph[now].size(); i++){
+            int next = graph[now][i].first
             int cost = dist + graph[now][i].second;
 
             // 현재 노드들을 거쳐서 다른 노드로 이동하는 거리가 더 짧은 경우
-            if (cost < d[graph[now][i].first]) {
-                d[graph[now][i].first] = cost;
-                pq.push(make_pair(-cost, graph[now][i].first));
+            if (cost < d[graph[next]) {
+                d[next] = cost;
+                pq.push(make_pair(-cost, next));
+                // 경로 저장(next->now)
+                route[next] = now;
             }
         }
     }
@@ -391,6 +395,7 @@ main (int argc, char *argv[])
   {
     FILE *fp; // 파일 입출력
     fp = fopen("input.txt","r");
+    fp2 = fopen("route.txt","w");
     fscanf(fp,"%d %d", &n, &m)
     uint32_t start = 0
 
@@ -413,13 +418,21 @@ main (int argc, char *argv[])
     // 다익스트라 알고리즘을 수행
     dijkstra(start);
 
-    // 시작 노드에서 다른 모든 노드로 가는 최단 거리 출력
-    for (int i = 1; i <= n; i++) {
-        if (d[i] == INF) // 도달할 수 없는 경우
-            cout << "INF" << '\n';
-        else // 도달할 수 있는 경우 거리 출력
-            cout << d[i] << '\n';
+    vector<int> routes;
+    int temp = n-1;
+    while(temp) {
+      routes.push_back(temp)
+      temp = route[temp];
     }
+
+    // 경로 길이 및 path 출력
+    int len = routes.size();
+    fprinf(fp2,"%d", len);
+    
+    for(int i=len-1;i>=0;i--)
+      fprintf(fp2,"%d ",route[i]);
+
+    
 
     const uint32_t nWifi = 3, nAp = 3; 
     NodeContainer wifiStaNodes;
