@@ -17,7 +17,7 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("VideoStreamClientApplication");
+NS_LOG_COMPONENT_DEFINE ("VideoStreamClient");
 
 NS_OBJECT_ENSURE_REGISTERED (VideoStreamClient);
 
@@ -37,8 +37,8 @@ VideoStreamClient::GetTypeId (void)
                     MakeUintegerAccessor (&VideoStreamClient::m_peerPort),
                     MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("IsRTP", "1 if the client wants to use RTP",
-                    UintegerValue(0),
-                    MakeUintegerAccessor (&VideoStreamClient::SetRTP),
+                    UintegerValue(1),
+                    MakeUintegerAccessor (&VideoStreamClient::m_rtpSet),
                     MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
@@ -61,7 +61,6 @@ VideoStreamClient::VideoStreamClient ()
   m_reReqDelay = 100;
   m_minSeq = 1;
   m_maxSeq = 0;
-  m_isRTP = false;
 }
 
 VideoStreamClient::~VideoStreamClient ()
@@ -108,6 +107,8 @@ void
 VideoStreamClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
+
+  SetRTP (m_rtpSet);
 
   if (m_socket == 0)
   {
