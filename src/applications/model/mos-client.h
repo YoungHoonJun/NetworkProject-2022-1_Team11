@@ -8,6 +8,8 @@
 #include "ns3/ptr.h"
 #include "ns3/address.h"
 #include "ns3/traced-callback.h"
+#include <fstream>
+
 
 
 namespace ns3 {
@@ -54,14 +56,12 @@ private:
    * @brief Send the packet to the remote server.
    */
   void Send (void);
-
-  /**
-   * @brief Read data from the frame buffer. If the buffer does not have 
-   * enough frames, it will reschedule the reading event next second.
-   * 
-   * @return the updated buffer size (-1 if the buffer size is smaller than the fps)
-   */
+  void SetMaxPacketSize (uint32_t maxPacketSize);
+  uint32_t GetMaxPacketSize (void) const;
+  void SetTextFile(std::string textFile);
+  std::string GetTextFile(void) const;
   
+
 
   /**
    * @brief Handle a packet reception.
@@ -75,17 +75,11 @@ private:
   Ptr<Socket> m_socket; //!< Socket
   Address m_peerAddress; //!< Remote peer address
   uint16_t m_peerPort; //!< Remote peer port
-
-  uint16_t m_initialDelay; //!< Seconds to wait before displaying the content
-  uint16_t m_stopCounter; //!< Counter to decide if the video streaming finishes
-  uint16_t m_rebufferCounter; //!< Counter of the rebuffering event
-  uint16_t m_videoLevel; //!< The quality of the video from the server
-  uint32_t m_frameRate; //!< Number of frames per second to be played
-  uint32_t m_frameSize; //!< Total size of packets from one frame
-  uint32_t m_lastRecvFrame; //!< Last received frame number
-  uint32_t m_lastBufferSize; //!< Last size of the buffer
-  uint32_t m_currentBufferSize; //!< Size of the frame buffer
-
+	
+  uint16_t m_sendNum; //!< how many lines you send
+  std::string m_textFile;
+  std::vector<std::string> m_lineList; //!< array of lines from the text file
+  uint32_t m_maxPacketSize; //!< Maximum size of the packet to be sent
   EventId m_bufferEvent; //!< Event to read from the buffer
   EventId m_sendEvent; //!< Event to send data to the server
 };
