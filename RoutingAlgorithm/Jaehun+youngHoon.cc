@@ -17,18 +17,18 @@ using namespace ns3;
 
 // 노드 개수: n, 간선 개수: m, 시작 노드 번호: start
 // 노드의 개수는 최대 100,000개라고 가정
-int n, m, start;
+uint32_t n, m, start;
 
 // 각 노드에 연결되어 있는 노드에 대한 정보를 담는 배열
 // (인접 노드 번호, 가중치)
-std::vector<std::pair<int, int>> graph[100'001];
+std::vector<std::pair<uint32_t, uint32_t>> graph[100001];
 
 // 최단 거리 테이블 만들기
-int d[100'001];
-int route[100'001];
+uint32_t d[100001];
+uint32_t route[100001];
 
-void dijkstra(int start) {
-    std::priority_queue<std::pair<int, int>> pq; 
+void dijkstra(uint32_t start) {
+    std::priority_queue<std::pair<uint32_t, uint32_t>> pq; 
     // 기본적으로 최대 힙이기 때문에
     // 거리가 가장 짧은 노드부터 먼저 꺼내는 '최소 힙'으로 구현하려면
     // 원소를 삽입, 삭제할 때 마이너스 부호를 붙여줘야 한다.
@@ -40,20 +40,20 @@ void dijkstra(int start) {
 
     while (!pq.empty()) {
         // 최단 거리가 가장 짧은 노드에 대한 정보 꺼내기
-        int dist = -pq.top().first; // 시작 노드에서 현재 노드까지의 거리
-        int now = pq.top().second; // 현재 노드 번호
+        uint32_t dist = -pq.top().first; // 시작 노드에서 현재 노드까지의 거리
+        uint32_t now = pq.top().second; // 현재 노드 번호
         pq.pop();
 
         // 현재 노드가 이미 처리된 적이 있는 노드라면 무시
         if (dist > d[now]) continue;
 
         // 현재 노드와 연결된 다른 인접 노드들을 확인
-        for (int i = 0; i < graph[now].size(); i++){
-            int next = graph[now][i].first;
-            int cost = dist + graph[now][i].second;
+        for (uint32_t i = 0; i < graph[now].size(); i++){
+            uint32_t next = graph[now][i].first;
+            uint32_t cost = dist + graph[now][i].second;
 
             // 현재 노드들을 거쳐서 다른 노드로 이동하는 거리가 더 짧은 경우
-            if (cost < d[graph[next]]) {
+            if (cost < d[next]) {
                 d[next] = cost;
                 pq.push(std::make_pair(-cost, next));
                 // 경로 저장(next->now)
@@ -78,8 +78,7 @@ void dijkstra(int start) {
 
 NS_LOG_COMPONENT_DEFINE ("VideoStreamTest");
 
-int main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
