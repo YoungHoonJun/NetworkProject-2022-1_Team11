@@ -47,12 +47,6 @@ public:
    * @param addr server address
    */
   void SetRemote (Address addr);
-  /**
-   * @brief Set the client to use RTP.
-   * 
-   * @param void
-   */
-  void SetRTP (uint16_t is_rtp);
 
 protected:
   virtual void DoDispose (void);
@@ -106,7 +100,6 @@ private:
   std::queue<uint32_t> m_lastSeqQueue; //!< last seq num of each frame
   std::map<uint32_t, int64_t> m_missingQueue; //!< last seq num of each frame
   std::map<uint32_t, Packet> m_packetBuffer; //!< Packet buffer for RTP (key = seq num.)
-  uint16_t m_rtpSet; //!< temp value to set rtp
   bool m_isRTP; //!< True if Client is using Real-time protocol
 
 };

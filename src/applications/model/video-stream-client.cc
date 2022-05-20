@@ -14,6 +14,7 @@
 #include "ns3/trace-source-accessor.h"
 #include "video-stream-client.h"
 #include "ns3/rtp-header.h"
+#include "ns3/boolean.h"
 
 namespace ns3 {
 
@@ -36,10 +37,10 @@ VideoStreamClient::GetTypeId (void)
                     UintegerValue (5000),
                     MakeUintegerAccessor (&VideoStreamClient::m_peerPort),
                     MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("IsRTP", "1 if the client wants to use RTP",
-                    UintegerValue(1),
-                    MakeUintegerAccessor (&VideoStreamClient::m_rtpSet),
-                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("IsRTP", "true if the client wants to use RTP",
+                    BooleanValue(false),
+                    MakeBooleanAccessor (&VideoStreamClient::m_isRTP),
+                    MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -82,18 +83,6 @@ VideoStreamClient::SetRemote (Address addr)
 {
   NS_LOG_FUNCTION (this << addr);
   m_peerAddress = addr;
-}
-
-void
-VideoStreamClient::SetRTP (uint16_t is_rtp)
-{
-  NS_LOG_FUNCTION (this << is_rtp);
-  if (is_rtp == 1)
-  {
-    m_isRTP = true;
-  }
-  else
-    m_isRTP = false;
 }
 
 void
