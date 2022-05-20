@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
 
 using namespace ns3;
 #define INF 1e9 // 무한을 의미하는 값으로 10억을 설정
@@ -82,40 +83,43 @@ int main (int argc, char *argv[]) {
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
-  std::ifstream fin("/home/junyounghoon/ns-allinone-3.29/ns-3.29/scratch/videoStreamer/input.txt");
-  std::string line;
+  FILE *fp; // file io
+  fp = fopen("input.txt", "r");
+  fp2 = fopen("route.txt", "w");
+  fscanf(fp, "%d %d", &nodenum, &bridgenum);
+  uint32_t start = 0;
+
+  for(uint32_t i = 0; i <bridgenum; i++){
+      uint32_t a,b,c;
+      fscanf(fp, "%d %d %d", &a, &b, &c);
+
+      // node a -> node b, cost c
+      graph[a].push_back({b,c});
+      graph[b].push_back({a,c});
+  }
+
+  fill(d, d+100001, INF);
+
+  dijkstra(start);
+
+  std::vector<uint32_t> routes;
+  uint32_t temp = nodenum - 1;
+  while(temp){
+      routes.push_back(temp);
+      temp = routes[temp];
+  }
+  routes.push_back(nodenum+1);
+  uint32_t len = routes.size();
   std::vector<std::vector<int>> route = {};
 
-  route.push_back({0, 1});
-
-  getline(fin, line);
-  const uint32_t nodeNum = line[0] - '0';
-  const uint32_t bridgeNum = line[2] - '0';
-
-  while (!fin.eof()) {
-    getline(fin, line);
-
-    std::vector<int> v_temp = {};
-
-    const uint32_t temp1 = line[0] - '0';
-    const uint32_t temp2 = line[2] - '0';
-
-    v_temp.push_back(temp1);
-    v_temp.push_back(temp2);
-
-    route.push_back(v_temp);
-    
-    if (fin.eof()) {
+  for(uint32_t i = 1; i < len; i++){
       std::vector<int> v_temp = {};
-
-      const uint32_t temp1 = nodeNum;
-      const uint32_t temp2 = nodeNum + 1;
+      const uint32_t temp1 = routes[i-1];
+      const uint32_t temp2 = routes[i];
 
       v_temp.push_back(temp1);
       v_temp.push_back(temp2);
-
       route.push_back(v_temp);
-    }
   }
 
   Time::SetResolution (Time::NS);
@@ -392,7 +396,7 @@ int main (int argc, char *argv[]) {
   }
   else if (CASE == 5)
   {
-    const uint32_t nWifi = nodeNum + 2, nAp = nodeNum + 2;
+    const uint32_t nWifi = nodenum + 2, nAp = len;
     NodeContainer wifiStaNodes;
     wifiStaNodes.Create (nWifi);
     NodeContainer wifiApNode;
