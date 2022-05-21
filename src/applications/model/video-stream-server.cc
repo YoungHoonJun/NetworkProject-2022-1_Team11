@@ -18,7 +18,7 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("VideoStreamServer");
+NS_LOG_COMPONENT_DEFINE ("VideoStreamServerApplication");
 
 NS_OBJECT_ENSURE_REGISTERED (VideoStreamServer);
 

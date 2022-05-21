@@ -18,7 +18,7 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("VideoStreamClient");
+NS_LOG_COMPONENT_DEFINE ("VideoStreamClientApplication");
 
 NS_OBJECT_ENSURE_REGISTERED (VideoStreamClient);
 
@@ -96,8 +96,6 @@ void
 VideoStreamClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
-
-  SetRTP (m_rtpSet);
 
   if (m_socket == 0)
   {
