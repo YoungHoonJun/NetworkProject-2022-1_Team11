@@ -23,7 +23,7 @@ uint32_t n, m, start;
 
 // 각 노드에 연결되어 있는 노드에 대한 정보를 담는 배열
 // (인접 노드 번호, 가중치)
-std::vector<std::pair<uint32_t, uint32_t>> graph[100001];
+vector<pair<uint32_t, uint32_t>> graph[100001];
 
 // 최단 거리 테이블 만들기
 uint32_t d[100001];
@@ -31,7 +31,7 @@ uint32_t from[100001];
 uint32_t nodenum, bridgenum;
 
 void dijkstra(uint32_t start) {
-    std::priority_queue<std::pair<uint32_t, uint32_t>> pq; 
+    priority_queue<pair<uint32_t, uint32_t>> pq; 
     // 기본적으로 최대 힙이기 때문에
     // 거리가 가장 짧은 노드부터 먼저 꺼내는 '최소 힙'으로 구현하려면
     // 원소를 삽입, 삭제할 때 마이너스 부호를 붙여줘야 한다.
@@ -58,7 +58,7 @@ void dijkstra(uint32_t start) {
             // 현재 노드들을 거쳐서 다른 노드로 이동하는 거리가 더 짧은 경우
             if (cost < d[next]) {
                 d[next] = cost;
-                pq.push(std::make_pair(-cost, next));
+                pq.push(make_pair(-cost, next));
                 // 경로 저장(next->now)
                 from[next] = now;
             }
@@ -107,7 +107,7 @@ int main (int argc, char *argv[]) {
   fill(d, d+100001, INF);
 
   dijkstra(start);
-  std::vector<uint32_t> routes;
+  vector<uint32_t> routes;
   uint32_t temp = nodenum - 1;
 
   routes.push_back(nodenum);
@@ -117,10 +117,10 @@ int main (int argc, char *argv[]) {
   }
   routes.push_back(0);
   uint32_t len = routes.size();
-  std::vector<std::vector<int>> route = {};
+  vector<vector<int>> route = {};
 
   for(uint32_t i = len-1; i >= 1; i--){
-      std::vector<int> v_temp = {};
+      vector<int> v_temp = {};
       const uint32_t temp1 = routes[i];
       const uint32_t temp2 = routes[i-1];
 
@@ -129,7 +129,7 @@ int main (int argc, char *argv[]) {
       route.push_back(v_temp);
       printf("%d %d\n", temp1, temp2);
   }
-  return 0;
+  // return 0;
 
   Time::SetResolution (Time::NS);
   LogComponentEnable ("VideoStreamClientApplication", LOG_LEVEL_INFO);
