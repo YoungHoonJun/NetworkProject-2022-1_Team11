@@ -14,6 +14,7 @@
 #include <queue>
 
 using namespace ns3;
+using namespace std;
 #define INF 1e9 // 무한을 의미하는 값으로 10억을 설정
 
 // 노드 개수: n, 간선 개수: m, 시작 노드 번호: start
@@ -27,6 +28,7 @@ std::vector<std::pair<uint32_t, uint32_t>> graph[100001];
 // 최단 거리 테이블 만들기
 uint32_t d[100001];
 uint32_t route[100001];
+uint32_t nodenum, bridgenum;
 
 void dijkstra(uint32_t start) {
     std::priority_queue<std::pair<uint32_t, uint32_t>> pq; 
@@ -83,25 +85,30 @@ int main (int argc, char *argv[]) {
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
-  FILE *fp; // file io
-  fp = fopen("input.txt", "r");
-  fp2 = fopen("route.txt", "w");
-  fscanf(fp, "%d %d", &nodenum, &bridgenum);
-  uint32_t start = 0;
+  const uint32_t start = 0;
+
+  ifstream fin("ns-3.29/scratch/input.txt");
+  string line;
+  getline(fin, line);
+  nodenum = line[0] - '0';
+  bridgenum = line[2] - '0';
+  printf("%u", nodenum);
+  printf("%u", bridgenum);
+
+  return 0;
 
   for(uint32_t i = 0; i <bridgenum; i++){
-      uint32_t a,b,c;
-      fscanf(fp, "%d %d %d", &a, &b, &c);
-
+      const uint32_t temp1 = line[0] - '0';
+      const uint32_t temp2 = line[2] - '0';
+      const uint32_t temp3 = line[4] - '0';
       // node a -> node b, cost c
-      graph[a].push_back({b,c});
-      graph[b].push_back({a,c});
+      graph[temp1].push_back({temp2,temp3});
+      graph[temp2].push_back({temp1,temp3});
   }
 
   fill(d, d+100001, INF);
 
   dijkstra(start);
-
   std::vector<uint32_t> routes;
   uint32_t temp = nodenum - 1;
   while(temp){
@@ -120,6 +127,7 @@ int main (int argc, char *argv[]) {
       v_temp.push_back(temp1);
       v_temp.push_back(temp2);
       route.push_back(v_temp);
+      printf("%u %u", temp1, temp2);
   }
 
   Time::SetResolution (Time::NS);
@@ -464,7 +472,7 @@ int main (int argc, char *argv[]) {
       serverApps.Stop (Seconds (100.0));
     }
   
-    for(uint k=0; k<bridgeNum+2; k++)
+    for(uint k=0; k<bridgenum+2; k++)
     {
       VideoStreamClientHelper videoClient (apInterfaces.GetAddress (route[k][1]), 5000);
       ApplicationContainer clientApps =
