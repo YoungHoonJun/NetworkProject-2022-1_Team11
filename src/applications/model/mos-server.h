@@ -56,9 +56,7 @@ class Packet;
     virtual void StartApplication (void);
     virtual void StopApplication (void);
 
-    /**
-     * @brief The information required for each client.
-     */
+    
     typedef struct ClientInfo
     {
       Address m_address; //!< Address
@@ -71,11 +69,7 @@ class Packet;
     
     void SendByTime (uint32_t ipAddress, uint8_t* morseList, uint16_t cnt);
     
-    /**
-     * @brief Send the video frame to the given ipv4 address.
-     * 
-     * @param ipAddress ipv4 address
-     */
+    
     void Send (uint32_t ipAddress);
 
 	void WriteBuffer(uint8_t* textBuffer, uint32_t ipAddr);
@@ -87,8 +81,6 @@ class Packet;
 
     uint16_t m_port; //!< The port 
     Address m_local; //!< Local multicast address
-
-    std::vector<uint32_t> m_frameSizeList; //!< List of video frame sizes
 
     std::unordered_map<uint32_t, ClientInfo*> m_clients; //!< Information saved for each client
   };

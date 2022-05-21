@@ -1,0 +1,245 @@
+At time 0.5s client send initial packet to 10.1.1.2 port 5000
+At time 0.502003 client asks server alive from 10.1.1.1and server resends ack
+At time 0.505006 client send server msg 10.1.1.2 port 5000
+MSG: hi my name is
+At time 0.506006 client send server msg 10.1.1.2 port 5000
+MSG: nonono
+At time 0.507006 client send server msg 10.1.1.2 port 5000
+MSG: yeah
+At time 0.507006s client sent all txt line to 10.1.1.2 port 5000
+At time 0.507121 server recieved msg from10.1.1.1
+MSG:hi my name is
+At time 0.508121 server recieved msg from10.1.1.1
+MSG:nonono
+At time 0.509121 server recieved msg from10.1.1.1
+MSG:yeah
+At time0.509124 Convert to Mos is finished at server - start mos sending
+-----MOS START BY CLIENT SENDING MSG-----
+
+AT TIME 0.511128 CLIENT 10.1.1.2 Get .
+
+AT TIME 1.51113 CLIENT 10.1.1.2 Get .
+
+AT TIME 2.51113 CLIENT 10.1.1.2 Get .
+
+AT TIME 3.51113 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 7.51113 CLIENT 10.1.1.2 Get .
+
+AT TIME 8.51113 CLIENT 10.1.1.2 Get .
+
+
+
+
+
+
+
+
+
+
+
+AT TIME 18.5111 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 21.5111 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 27.5111 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 30.5111 CLIENT 10.1.1.2 Get .
+
+AT TIME 31.5111 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 34.5111 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+
+
+
+
+
+
+
+AT TIME 46.5111 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 49.5111 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 53.5111 CLIENT 10.1.1.2 Get .
+
+AT TIME 54.5111 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 60.5111 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 63.5111 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 69.5111 CLIENT 10.1.1.2 Get .
+
+
+
+
+
+
+
+
+
+
+
+AT TIME 79.5111 CLIENT 10.1.1.2 Get .
+
+AT TIME 80.5111 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 84.5111 CLIENT 10.1.1.2 Get .
+
+AT TIME 85.5111 CLIENT 10.1.1.2 Get .
+
+AT TIME 86.5111 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 90.5111 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 93.5111 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 97.5111 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 100.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 103.511 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 109.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 112.511 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 116.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 119.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 122.511 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 128.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 131.511 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 135.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 138.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 141.511 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 147.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 150.511 CLIENT 10.1.1.2 Get .
+
+AT TIME 151.511 CLIENT 10.1.1.2 Get -
+
+
+
+AT TIME 154.511 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 160.511 CLIENT 10.1.1.2 Get .
+
+
+
+
+AT TIME 164.511 CLIENT 10.1.1.2 Get .
+
+AT TIME 165.511 CLIENT 10.1.1.2 Get -
+
+
+
+
+
+
+AT TIME 171.511 CLIENT 10.1.1.2 Get .
+
+AT TIME 172.511 CLIENT 10.1.1.2 Get .
+
+AT TIME 173.511 CLIENT 10.1.1.2 Get .
+
+AT TIME 174.511 CLIENT 10.1.1.2 Get .
