@@ -27,7 +27,7 @@ std::vector<std::pair<uint32_t, uint32_t>> graph[100001];
 
 // 최단 거리 테이블 만들기
 uint32_t d[100001];
-uint32_t route[100001];
+uint32_t from[100001];
 uint32_t nodenum, bridgenum;
 
 void dijkstra(uint32_t start) {
@@ -60,7 +60,7 @@ void dijkstra(uint32_t start) {
                 d[next] = cost;
                 pq.push(std::make_pair(-cost, next));
                 // 경로 저장(next->now)
-                route[next] = now;
+                from[next] = now;
             }
         }
     } 
@@ -92,12 +92,10 @@ int main (int argc, char *argv[]) {
   getline(fin, line);
   nodenum = line[0] - '0';
   bridgenum = line[2] - '0';
-  printf("%u", nodenum);
-  printf("%u", bridgenum);
 
-  return 0;
 
   for(uint32_t i = 0; i <bridgenum; i++){
+      getline(fin, line);
       const uint32_t temp1 = line[0] - '0';
       const uint32_t temp2 = line[2] - '0';
       const uint32_t temp3 = line[4] - '0';
@@ -111,24 +109,27 @@ int main (int argc, char *argv[]) {
   dijkstra(start);
   std::vector<uint32_t> routes;
   uint32_t temp = nodenum - 1;
+
+  routes.push_back(nodenum);
   while(temp){
       routes.push_back(temp);
-      temp = routes[temp];
+      temp = from[temp];
   }
-  routes.push_back(nodenum+1);
+  routes.push_back(0);
   uint32_t len = routes.size();
   std::vector<std::vector<int>> route = {};
 
-  for(uint32_t i = 1; i < len; i++){
+  for(uint32_t i = len-1; i >= 1; i--){
       std::vector<int> v_temp = {};
-      const uint32_t temp1 = routes[i-1];
-      const uint32_t temp2 = routes[i];
+      const uint32_t temp1 = routes[i];
+      const uint32_t temp2 = routes[i-1];
 
       v_temp.push_back(temp1);
       v_temp.push_back(temp2);
       route.push_back(v_temp);
-      printf("%u %u", temp1, temp2);
+      printf("%d %d\n", temp1, temp2);
   }
+  return 0;
 
   Time::SetResolution (Time::NS);
   LogComponentEnable ("VideoStreamClientApplication", LOG_LEVEL_INFO);
