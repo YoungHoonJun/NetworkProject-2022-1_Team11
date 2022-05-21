@@ -53,7 +53,6 @@ MosClient::GetTypeId (void)
 MosClient::MosClient ()
 {
   NS_LOG_FUNCTION (this);
-  m_bufferEvent = EventId();
   m_sendEvent = EventId();
 }
 
@@ -90,6 +89,7 @@ MosClient::GetMaxPacketSize (void) const
   return m_maxPacketSize;
 }
 
+// get all lines from the input file
 void
 MosClient::SetTextFile (std::string textFile)
 {
@@ -104,7 +104,6 @@ MosClient::SetTextFile (std::string textFile)
       m_lineList.push_back (line);
     }
   }
-  NS_LOG_INFO ("text new line len: " << m_lineList.size());
 }
 
 std::string
@@ -167,37 +166,39 @@ MosClient::StartApplication (void)
       NS_ASSERT_MSG (false, "Incompatible address type: " << m_peerAddress);
     }
   }
+  // set timer and send number
+  m_lastTime = -1;
   m_sendNum = 0;
   uint8_t dataBuffer[10];
   sprintf((char *) dataBuffer, "%hu", (unsigned short int)2);
+  // 2: means start of the application
   Ptr<Packet> sys2Packet = Create<Packet> (dataBuffer, 10);
   m_socket->Send (sys2Packet);
 
+  
   if (Ipv4Address::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client send initial packet to " <<
                   Ipv4Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
   }
   else if (Ipv6Address::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client send initial packet to " <<
                   Ipv6Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
   }
   else if (InetSocketAddress::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client send initial packet to " <<
                   InetSocketAddress::ConvertFrom (m_peerAddress).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (m_peerAddress).GetPort ());
   }
   else if (Inet6SocketAddress::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent initial packet to " <<
                   Inet6SocketAddress::ConvertFrom (m_peerAddress).GetIpv6 () << " port " << Inet6SocketAddress::ConvertFrom (m_peerAddress).GetPort ());
   }
 
-
-
+  // activate when Server send some packet
   m_socket->SetRecvCallback (MakeCallback (&MosClient::HandleRead, this));
-  // m_bufferEvent = Simulator::Schedule (Seconds (m_initialDelay), &MosClient::ReadFromBuffer, this);
 }
 
 void
@@ -214,6 +215,12 @@ MosClient::StopApplication ()
 
 }
 
+/*
+  send txt file line
+  if it send all txt, it would be terminated with sending 12
+  else, it would send next line
+*/
+
 void
 MosClient::Send ()
 {
@@ -222,33 +229,35 @@ MosClient::Send ()
 
   uint8_t dataBuffer[m_maxPacketSize];
   sprintf((char *) dataBuffer, "%hu", (unsigned short int)11);
-
+  // sign for message sending is 11
   const char* c = m_lineList[m_sendNum].c_str();
   sprintf((char *) dataBuffer + 2, "%s", c);
   Ptr<Packet> textPacket = Create<Packet> (dataBuffer, m_maxPacketSize);
   m_socket->Send (textPacket);
   m_sendNum++;
 
+  std::string tmp = c;
+
   if (Ipv4Address::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
-                  Ipv4Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort << "message:" << c);
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << " client send server msg " << Ipv4Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
   }
   else if (Ipv6Address::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
-                  Ipv6Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << " client send server msg" << Ipv6Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
   }
   else if (InetSocketAddress::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
-                  InetSocketAddress::ConvertFrom (m_peerAddress).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (m_peerAddress).GetPort ());
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << " client send server msg" <<
+			InetSocketAddress::ConvertFrom (m_peerAddress) << " port " << InetSocketAddress::ConvertFrom (m_peerAddress).GetPort ());
   }
   else if (Inet6SocketAddress::IsMatchingType (m_peerAddress))
   {
-    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent 10 bytes to " <<
-                  Inet6SocketAddress::ConvertFrom (m_peerAddress).GetIpv6 () << " port " << Inet6SocketAddress::ConvertFrom (m_peerAddress).GetPort ());
+    NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << " client send server msg" <<
+			Inet6SocketAddress::ConvertFrom (m_peerAddress) << " port " << Inet6SocketAddress::ConvertFrom (m_peerAddress).GetPort ());
   }
+
+  NS_LOG_INFO ("MSG: " << c);
 
   if (m_lineList.size() <= m_sendNum) //send all
   {
@@ -257,6 +266,25 @@ MosClient::Send ()
     sprintf((char *) dataBuffer, "%hu", (unsigned short int)12);
     Ptr<Packet> textPacket = Create<Packet> (dataBuffer, 10);
     m_socket->Send (textPacket);
+
+    if (Ipv4Address::IsMatchingType (m_peerAddress))
+    {
+      NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client sent all txt line" << " to " << Ipv4Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
+    }
+    else if (Ipv6Address::IsMatchingType (m_peerAddress))
+    {
+      NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client send all txt line" << " to " << Ipv6Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
+    }
+    else if (InetSocketAddress::IsMatchingType (m_peerAddress))
+    {
+      NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client send all txt line" <<
+			  " to " << InetSocketAddress::ConvertFrom (m_peerAddress) << " port " << InetSocketAddress::ConvertFrom (m_peerAddress).GetPort ());
+    }
+    else if (Inet6SocketAddress::IsMatchingType (m_peerAddress))
+    {
+      NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client send all txt line " <<
+		  	  " to " << Inet6SocketAddress::ConvertFrom (m_peerAddress) << " port " << Inet6SocketAddress::ConvertFrom (m_peerAddress).GetPort ());
+	}
   }
   else
   {
@@ -284,15 +312,33 @@ MosClient::HandleRead (Ptr<Socket> socket)
 	  sscanf ((char*)recvData, "%hu", &signal);
 
 	  if (signal == (unsigned short int) 2)
+	  // if client get ack from the server, clinet send the txt file
 	  {
 	    m_sendEvent = Simulator::Schedule (MilliSeconds (1.0), &MosClient::Send, this);
 	  }
 
 	  if (signal == (unsigned short int) 11)
+	  // if client send the mos data, it shows the data with the proper time interval
 	  {
+		if (m_lastTime == -1){
+		  m_lastTime = Simulator::Now().GetSeconds();
+		  NS_LOG_INFO("-----MOS START BY CLIENT SENDING MSG-----" << std::endl);
+		}
+		else{
+		  double gap = Simulator::Now().GetSeconds() - m_lastTime;
+		  m_lastTime = Simulator::Now().GetSeconds();
+		  uint8_t tap = uint8_t(gap / 0.9);
+		  for (uint8_t i = 0; i < tap; i++){
+		    NS_LOG_INFO("");
+		  }
+		}
+
+		Address addr;
+		socket->GetPeerName (addr);
+		InetSocketAddress iaddr = InetSocketAddress::ConvertFrom (addr);
 		char c = '\0';
 		sscanf((char*)recvData + 2, "%c", &c);
-		NS_LOG_INFO("CLIENT SEND " << c);	
+		NS_LOG_INFO("AT TIME " << Simulator::Now().GetSeconds() <<" CLIENT " << iaddr.GetIpv4() << " Get " << c);	
 	  }	
     }
   }

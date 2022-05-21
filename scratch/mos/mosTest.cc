@@ -69,31 +69,32 @@ main (int argc, char *argv[])
 
 
     MosClientHelper mosClient (interfaces_0.GetAddress (1), 5000);
+	mosClient.SetAttribute ("TextFile", StringValue("./scratch/mos/text1.txt"));
     ApplicationContainer clientApp_1 = mosClient.Install (nodes.Get (0));
     clientApp_1.Start (Seconds (0.5));
-    clientApp_1.Stop (Seconds (1.0));
+    clientApp_1.Stop (Seconds (1000.0));
 
+	/*
 	mosClient.SetAttribute ("RemoteAddress", AddressValue(interfaces_1.GetAddress(1)) );
 	mosClient.SetAttribute ("RemotePort", UintegerValue(5000));
+	mosClient.SetAttribute ("TextFile", StringValue("./scratch/mos/text2.txt"));
 	ApplicationContainer clientApp_2 = mosClient.Install (nodes.Get (0));
-	clientApp_2.Start (Seconds (0.0));
-	clientApp_2.Stop (Seconds (0.1));
-
+	clientApp_2.Start (Seconds (0.5));
+	clientApp_2.Stop (Seconds (0.6));
+	*/
 
     MosServerHelper mosServer (5000);
     mosServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
-    mosServer.SetAttribute ("FrameFile", StringValue ("./scratch/mos/frameList.txt"));
-    // videoServer.SetAttribute ("FrameSize", UintegerValue (4096));
 
     ApplicationContainer serverApp_1 = mosServer.Install (nodes.Get (1));
 	
     serverApp_1.Start (Seconds (0.0));
-    serverApp_1.Stop (Seconds (100.0));
+    serverApp_1.Stop (Seconds (1000.0));
 
 	ApplicationContainer serverApp_2 = mosServer.Install (nodes.Get (2));
 
 	serverApp_2.Start (Seconds (0.0));
-	serverApp_2.Stop (Seconds (100.0));
+	serverApp_2.Stop (Seconds (1000.0));
 
     pointToPoint.EnablePcap ("videoStream", devices_0.Get(1), false);
 	pointToPoint.EnablePcap ("videoStream", devices_1.Get(1), false);

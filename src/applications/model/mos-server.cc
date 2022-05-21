@@ -15,18 +15,19 @@
 #include "ns3/uinteger.h"
 #include "ns3/mos-server.h"
 #include "ns3/string.h"
-#define DIT 0.2
+#define DIT 1.0
+// time interval for mos
 
 namespace ns3 {
 
 /* mos translate code from https://numerok.tistory.com/71 */
 class Morse {
-	std::string alpahbet[26]; // 알파벳의 모스 부호 저장
-	std::string digit[10]; // 숫자의 모스 부호 저장
-	std::string slash, question, comma, period, plus, equal; // 특수 문자의 모스 부호 저장
+	std::string alpahbet[26];
+	std::string digit[10];
+	std::string slash, question, comma, period, plus, equal;
 public:
-    Morse(); // alphabet[], digit[] 배열 및 특수 문자의 모스 부호 초기화
-    void text2Morse(std::string text, std::string& morse); // 영문 텍스트를 모스 부호로 변환
+    Morse();
+    void text2Morse(std::string text, std::string& morse);
 };
 Morse::Morse() {
     alpahbet[0] = ".-"; alpahbet[1] = "-..."; alpahbet[2] = "-.-."; alpahbet[3] = "-..";
@@ -98,7 +99,6 @@ MosServer::MosServer ()
 {
   NS_LOG_FUNCTION (this);
   m_socket = 0;
-  m_frameSizeList = std::vector<uint32_t>();
 }
 
 MosServer::~MosServer ()
@@ -144,6 +144,7 @@ MosServer::StartApplication (void)
 
   m_socket->SetAllowBroadcast (true);
   m_socket->SetRecvCallback (MakeCallback (&MosServer::HandleRead, this));
+  // handle each client
 }
 
 void
@@ -162,6 +163,7 @@ MosServer::StopApplication ()
   for (auto iter = m_clients.begin (); iter != m_clients.end (); iter++)
   {
     Simulator::Cancel (iter->second->m_sendEvent);
+	// stop sending event
   }
   
 }
@@ -178,6 +180,7 @@ MosServer::GetMaxPacketSize (void) const
   return m_maxPacketSize;
 }
 
+//save plain text as mos and call SendByTime
 void 
 MosServer::Send (uint32_t ipAddress)
 {
@@ -189,7 +192,7 @@ MosServer::Send (uint32_t ipAddress)
   
   // long line packet dividing function would be needed
   Morse m;
-  uint8_t morseList[30000];
+  uint8_t* morseList = new uint8_t[30000];
   uint16_t cnt = 0;
   for (auto str:clientInfo->m_textContainer)
   {
@@ -202,25 +205,26 @@ MosServer::Send (uint32_t ipAddress)
 	}
 	morseList[cnt] = '*'; //next line
   }
-	
-  Simulator::Schedule(Seconds(0.0), &MosServer::SendByTime, this, ipAddress, morseList, cnt);
   
-  // send some outputs 
+  NS_LOG_INFO ("At time" << Simulator::Now().GetSeconds() <<" Convert to Mos is finished at server - start mos sending");
+  Simulator::Schedule(Seconds(0.0), &MosServer::SendByTime, this, ipAddress, morseList, cnt);
 
 }
 
-
+// send each mos by time sequence
 void 
 MosServer::SendByTime (uint32_t ipAddress, uint8_t* morseList, uint16_t cnt)
 {
   ClientInfo* client = m_clients[ipAddress];
   uint16_t sent = client->m_sent;
+  // if send all mos, stop sending
   if (cnt <= sent)
   {
-	
+    delete[] morseList;	
 	return;
   }
 
+  // sending 11 means it contains data (mos)
   uint8_t dataBuffer[20];
   sprintf ((char *) dataBuffer, "%u", (unsigned short int)11);
   char c = morseList[client->m_sent++];
@@ -253,16 +257,12 @@ MosServer::SendByTime (uint32_t ipAddress, uint8_t* morseList, uint16_t cnt)
   
 }
 
+//save each line that is taken from client
 void
 MosServer::WriteBuffer(uint8_t* textBuffer, uint32_t ipAddr){
 	std::string str((const char*)textBuffer);
-	//uint16_t len = strlen( (char*) textBuffer );
-	//sscanf((char*) textBuffer, "%s", to + m_clients[ipAddr]->cnt);
 	m_clients[ipAddr]->m_textContainer.push_back(str);
-	//strcpy(to, (char*) textBuffer);
 	
-	//m_clients[ipAddr]->cnt = m_clients[ipAddr]->cnt + len;
-	NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s SEVER HAS STR " << str);
 }
 
 void 
@@ -278,7 +278,7 @@ MosServer::HandleRead (Ptr<Socket> socket)
     socket->GetSockName (localAddress);
     if (InetSocketAddress::IsMatchingType (from))
     {
-	  NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received " << packet->GetSize () << " bytes from " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+	  //NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received " << packet->GetSize () << " bytes from " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
 
       uint32_t ipAddr = InetSocketAddress::ConvertFrom (from).GetIpv4 ().Get ();
 
@@ -298,11 +298,14 @@ MosServer::HandleRead (Ptr<Socket> socket)
 		uint16_t signal = 0;
 		sscanf((char*) dataBuffer, "%hu", &signal);
 		
+		//client check server is alive
 		if (signal == (unsigned short int)2) 
 		{
 		  // resend ack 2
 		  Ptr<Packet> sys1Packet = Create<Packet> (dataBuffer, 10);
 		  socket->SendTo (sys1Packet, 0, from);
+		  NS_LOG_INFO("At time " << Simulator::Now ().GetSeconds () << " client asks server alive from " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << 
+				  "and server resends ack");
 		}
 	  }
 
@@ -314,13 +317,17 @@ MosServer::HandleRead (Ptr<Socket> socket)
 		uint16_t signal = 0;
 		sscanf((char*) dataBuffer, "%hu", &signal);
 
+		// server get plain text from client
 		if (signal == (unsigned short int) 11)
 		{
 		  uint8_t textBuffer[1000];
 		  packet->CopyData (textBuffer, 1000);
-		  NS_LOG_INFO("INSIDE textBuffer" << textBuffer +2 ); 
+		  NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << " server recieved msg from" <<
+			InetSocketAddress::ConvertFrom (from).GetIpv4 () << std::endl << "MSG:" << textBuffer + 2);
 		  MosServer::WriteBuffer(textBuffer + 2, ipAddr);
 		}
+
+		// server get plain text_ended signal from client. Start mos making and sending
 		if (signal == (unsigned short int) 12)
 		{
 			Simulator::Schedule (Seconds(0.0), &MosServer::Send, this, ipAddr);
