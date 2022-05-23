@@ -12,6 +12,8 @@
 
 #include <fstream>
 #include <unordered_map>
+#include <list>
+
 namespace ns3 {
 
 class Socket;
@@ -79,6 +81,11 @@ class Packet;
       uint32_t m_sent; //!< Counter for sent frames
       uint16_t m_videoLevel; //! Video level
       EventId m_sendEvent; //! Send event used by the client
+      //below members are for RTP
+      uint32_t m_lastSeq; //! Last sent sequence for RTP
+      uint32_t m_FrameLastSeq; //! Last sequence for current frame
+      std::list<Packet>* m_queue; //! Queue for sent packet (implemented on stl::list to search on it.)
+      bool m_isRTP; //! True if Client requires RTP
     } ClientInfo; //! To be compatible with C language
 
     /**
@@ -104,6 +111,8 @@ class Packet;
      */
     void HandleRead (Ptr<Socket> socket);
 
+    uint32_t m_maxRtpQueueLen; //!< Maximum packet queue size for RTP 
+
     Time m_interval; //!< Packet inter-send time
     uint32_t m_maxPacketSize; //!< Maximum size of the packet to be sent
     Ptr<Socket> m_socket; //!< Socket
@@ -117,9 +126,8 @@ class Packet;
     std::vector<uint32_t> m_frameSizeList; //!< List of video frame sizes
     
     std::unordered_map<uint32_t, ClientInfo*> m_clients; //!< Information saved for each client
-	std::unordered_map<uint32_t, double> m_lastTime; //!< Time when recieved last packet for each client
+	  std::unordered_map<uint32_t, double> m_lastTime; //!< Time when recieved last packet for each client
     const uint32_t m_frameSizes[6] = {0, 230400, 345600, 921600, 2073600, 2211840}; //!< Frame size for 360p, 480p, 720p, 1080p and 2K
-	//std::unordered_map<uint32_t, Client
   };
 
 } // namespace ns3

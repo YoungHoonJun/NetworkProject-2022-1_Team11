@@ -5,9 +5,7 @@
 
 #include <stdint.h>
 #include "ns3/header.h"
-#include "ns3/tcp-option.h"
 #include "ns3/buffer.h"
-#include "ns3/sequence-number.h"
 
 namespace ns3 {
 
@@ -15,7 +13,8 @@ namespace ns3 {
  * @brief A RTP(Real-time protocol)-like streaming Header
  * 
  * This class is simple RTP-like header
- * only checking sequence of sent/received each packet
+ * Transmit sequence of sent/received each packet
+ * and the last sequence number of the frame
  * 
  */
 class RtpHeader : public Header
@@ -51,9 +50,20 @@ public:
    * \return the sequence number for this RtpHeader
    */
   uint32_t GetSquence (void) const;
+  /**
+   * \brief Set the last sequence number of the frame
+   * \param lastFrameSequence the last sequence number of the frame for this RtpHeader
+   */
+  void SetLastFrameSquence (uint32_t lastFrameSequence);
+  /**
+   * \brief Get the last sequence number of the frame
+   * \return the last sequence number of the frame for this RtpHeader
+   */
+  uint32_t GetLastFrameSquence (void) const;
 
 private:
   uint32_t m_sequence; //!< Sequence number
+  uint32_t m_lastFrameSequence; //!< Last sequence number of the frame
 };
 
 } // namespace ns3
