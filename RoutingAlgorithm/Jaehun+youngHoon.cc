@@ -1,11 +1,3 @@
-/*****************************************************
-*
-* File:  videoStreamTest.cc
-*
-* Explanation:  This script modifies the tutorial first.cc
-*               to test the video stream application.
-*
-*****************************************************/
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
@@ -16,27 +8,30 @@
 #include "ns3/csma-module.h"
 #include "ns3/netanim-module.h"
 #include <iostream>
-#include <queue>
+#include <fstream>
+#include <string>
 #include <vector>
+#include <queue>
 
 using namespace ns3;
-#define INF 1e9 // 무한을 의미하는 값으로 10억을 설정
 using namespace std;
+#define INF 1e9 // 무한을 의미하는 값으로 10억을 설정
 
 // 노드 개수: n, 간선 개수: m, 시작 노드 번호: start
 // 노드의 개수는 최대 100,000개라고 가정
-int n, m, start;
+uint32_t n, m, start;
 
 // 각 노드에 연결되어 있는 노드에 대한 정보를 담는 배열
 // (인접 노드 번호, 가중치)
-vector<pair<int, int>> graph[100'001];
+vector<pair<uint32_t, uint32_t>> graph[100001];
 
 // 최단 거리 테이블 만들기
-int d[100'001];
-int route[100'001];
+uint32_t d[100001];
+uint32_t from[100001];
+uint32_t nodenum, bridgenum;
 
-void dijkstra(int start) {
-    priority_queue<pair<int, int>> pq; 
+void dijkstra(uint32_t start) {
+    priority_queue<pair<uint32_t, uint32_t>> pq; 
     // 기본적으로 최대 힙이기 때문에
     // 거리가 가장 짧은 노드부터 먼저 꺼내는 '최소 힙'으로 구현하려면
     // 원소를 삽입, 삭제할 때 마이너스 부호를 붙여줘야 한다.
@@ -48,28 +43,27 @@ void dijkstra(int start) {
 
     while (!pq.empty()) {
         // 최단 거리가 가장 짧은 노드에 대한 정보 꺼내기
-        int dist = -pq.top().first; // 시작 노드에서 현재 노드까지의 거리
-        int now = pq.top().second; // 현재 노드 번호
+        uint32_t dist = -pq.top().first; // 시작 노드에서 현재 노드까지의 거리
+        uint32_t now = pq.top().second; // 현재 노드 번호
         pq.pop();
 
         // 현재 노드가 이미 처리된 적이 있는 노드라면 무시
         if (dist > d[now]) continue;
 
         // 현재 노드와 연결된 다른 인접 노드들을 확인
-        for (int i = 0; i < graph[now].size(); i++){
-            int next = graph[now][i].first
-            int cost = dist + graph[now][i].second;
+        for (uint32_t i = 0; i < graph[now].size(); i++){
+            uint32_t next = graph[now][i].first;
+            uint32_t cost = dist + graph[now][i].second;
 
             // 현재 노드들을 거쳐서 다른 노드로 이동하는 거리가 더 짧은 경우
-            if (cost < d[graph[next]) {
+            if (cost < d[next]) {
                 d[next] = cost;
                 pq.push(make_pair(-cost, next));
                 // 경로 저장(next->now)
-                route[next] = now;
+                from[next] = now;
             }
         }
-    }
-   
+    } 
 }
 
 //#define NS3_LOG_ENABLE
@@ -80,17 +74,72 @@ void dijkstra(int start) {
  * 2. P2P network with 1 server and 2 clients
  * 3. Wireless network with 1 server and 3 mobile clients
  * 4. Wireless network with 3 servers and 3 mobile clients
+ * 5. New system(wi-fi)
+ * 6. New system(p2p)
  */
-#define CASE 0
+uint32_t CASE = 5;
 
 NS_LOG_COMPONENT_DEFINE ("VideoStreamTest");
 
-int
-main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
   CommandLine cmd;
+  cmd.AddValue("case", "Integer from 1 to 6", CASE);
   cmd.Parse (argc, argv);
+
+  const uint32_t start = 0;
+
+  ifstream fin("./scratch/videoStreamer/input.txt");
+  string line;
+  getline(fin, line);
+  nodenum = line[0] - '0';
+  bridgenum = line[2] - '0';
+
+
+  for(uint32_t i = 0; i <bridgenum; i++){
+      getline(fin, line);
+      const uint32_t temp1 = line[0] - '0';
+      const uint32_t temp2 = line[2] - '0';
+      const uint32_t temp3 = line[4] - '0';
+      // node a -> node b, cost c
+      graph[temp1].push_back({temp2,temp3});
+      graph[temp2].push_back({temp1,temp3});
+  }
+
+  fill(d, d+100001, INF);
+
+  dijkstra(start);
+  vector<uint32_t> routes;
+  uint32_t temp = nodenum - 1;
+
+  routes.push_back(nodenum);
+  while(temp){
+      routes.push_back(temp);
+      temp = from[temp];
+  }
+  routes.push_back(0);
+  uint32_t len = routes.size();
+  vector<vector<int>> route = {};
   
+  for(uint32_t i = len-1; i >= 1; i--){
+      vector<int> v_temp = {};
+      const uint32_t temp1 = routes[i];
+      const uint32_t temp2 = routes[i-1];
+
+      v_temp.push_back(temp1);
+      v_temp.push_back(temp2);
+      route.push_back(v_temp);
+      printf("%d %d\n", temp1, temp2);
+  }
+  vector<int> v_temp = {};
+  const uint32_t temp1 = nodenum;
+  const uint32_t temp2 = nodenum + 1;
+
+  v_temp.push_back(temp1);
+  v_temp.push_back(temp2);
+
+  route.push_back(v_temp);
+  // return 0;
+
   Time::SetResolution (Time::NS);
   LogComponentEnable ("VideoStreamClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable ("VideoStreamServerApplication", LOG_LEVEL_INFO);
@@ -98,68 +147,41 @@ main (int argc, char *argv[])
   if (CASE == 1)
   {
     NodeContainer nodes;
-    nodes.Create (3);
-	NodeContainer n0n1 = NodeContainer(nodes.Get(0), nodes.Get(1));
-	NodeContainer n0n2 = NodeContainer(nodes.Get(0), nodes.Get(2));
-
+    nodes.Create (2);
 
     PointToPointHelper pointToPoint;
     pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
     pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
-
-    NetDeviceContainer devices_0;
-	NetDeviceContainer devices_1;
-    devices_0 = pointToPoint.Install (n0n1);
-	devices_1 = pointToPoint.Install (n0n2);
-
+    NetDeviceContainer devices;
+    devices = pointToPoint.Install (nodes);
 
     InternetStackHelper stack;
     stack.Install (nodes);
 
     Ipv4AddressHelper address;
     address.SetBase ("10.1.1.0", "255.255.255.0");
-    Ipv4InterfaceContainer interfaces_0 = address.Assign (devices_0);
 
-	address.SetBase ("10.1.2.0", "255.255.255.0");
-	Ipv4InterfaceContainer interfaces_1 = address.Assign (devices_1);
+    Ipv4InterfaceContainer interfaces = address.Assign (devices);
 
-
-    VideoStreamClientHelper videoClient (interfaces_0.GetAddress (1), 5000);
-    ApplicationContainer clientApp_1 = videoClient.Install (nodes.Get (0));
-    clientApp_1.Start (Seconds (0.5));
-    clientApp_1.Stop (Seconds (2.0));
-
-	videoClient.SetAttribute ("RemoteAddress", AddressValue(interfaces_1.GetAddress(1)) );
-	videoClient.SetAttribute ("RemotePort", UintegerValue(5000));
-	ApplicationContainer clientApp_2 = videoClient.Install (nodes.Get (0));
-	clientApp_2.Start (Seconds (8.0));
-	clientApp_2.Stop (Seconds (10.0));
-
-
+    VideoStreamClientHelper videoClient (interfaces.GetAddress (0), 5000);
+    ApplicationContainer clientApp = videoClient.Install (nodes.Get (1));
+    clientApp.Start (Seconds (0.5));
+    clientApp.Stop (Seconds (100.0));
 
     VideoStreamServerHelper videoServer (5000);
     videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
     videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/frameList.txt"));
     // videoServer.SetAttribute ("FrameSize", UintegerValue (4096));
 
-    ApplicationContainer serverApp_1 = videoServer.Install (nodes.Get (1));
-	
-    serverApp_1.Start (Seconds (0.0));
-    serverApp_1.Stop (Seconds (100.0));
+    ApplicationContainer serverApp = videoServer.Install (nodes.Get (0));
+    serverApp.Start (Seconds (0.0));
+    serverApp.Stop (Seconds (100.0));
 
-	ApplicationContainer serverApp_2 = videoServer.Install (nodes.Get (2));
-
-	serverApp_2.Start (Seconds (0.0));
-	serverApp_2.Stop (Seconds (100.0));
-
-    pointToPoint.EnablePcap ("videoStream", devices_0.Get(1), false);
-	pointToPoint.EnablePcap ("videoStream", devices_1.Get(1), false);
-
+    pointToPoint.EnablePcap ("videoStream", devices.Get (1), false);
     Simulator::Run ();
     Simulator::Destroy ();
   }
-
   else if (CASE == 2)
   {
     NodeContainer nodes;
@@ -245,17 +267,17 @@ main (int argc, char *argv[])
 
     MobilityHelper mobility; 
     mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
-                                 "MinX", DoubleValue (0.0),
-                                 "MinY", DoubleValue (0.0),
-                                 "DeltaX", DoubleValue (30.0),
-                                 "DeltaY", DoubleValue (30.0),
-                                 "GridWidth", UintegerValue (2),
-                                 "LayoutType", StringValue ("RowFirst"));
- 
+                                "MinX", DoubleValue (0.0),
+                                "MinY", DoubleValue (0.0),
+                                "DeltaX", DoubleValue (30.0),
+                                "DeltaY", DoubleValue (30.0),
+                                "GridWidth", UintegerValue (2),
+                                "LayoutType", StringValue ("RowFirst"));
+
     
     mobility.SetMobilityModel ("ns3::RandomWalk2dMobilityModel", "Bounds", RectangleValue (Rectangle (-50, 50, -50, 50)));   
     mobility.Install (wifiStaNodes);
-   
+  
     mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");  
     mobility.Install (wifiApNode);
   
@@ -390,63 +412,20 @@ main (int argc, char *argv[])
     Simulator::Run ();
     Simulator::Destroy ();
   }
-
-  else if (CASE == 0)
+  else if (CASE == 5)
   {
-    FILE *fp; // 파일 입출력
-    fp = fopen("input.txt","r");
-    fp2 = fopen("route.txt","w");
-    fscanf(fp,"%d %d", &n, &m)
-    uint32_t start = 0
-
-    // ifstream fileStream("input.txt");
-    // getline(fileStream, line)
-
-    for (int i = 0; i < m; i++) {
-        int a, b, c;
-        fscanf(fp, "%d %d %d", &a, &b, &c)
-
-        // a번 노드에서 b번 노드로 가는 비용이 c라는 의미
-        graph[a].push_back({ b, c });
-        graph[b].push_back({ a, c }); 
-        // 양방향이므로 거꾸로도 추가해줌
-    }
-
-    // 최단 거리 테이블을 모두 무한으로 초기화
-    fill(d, d + 100'001, INF);
-
-    // 다익스트라 알고리즘을 수행
-    dijkstra(start);
-
-    vector<int> routes;
-    int temp = n-1;
-    while(temp) {
-      routes.push_back(temp)
-      temp = route[temp];
-    }
-
-    // 경로 길이 및 path 출력
-    int len = routes.size();
-    fprinf(fp2,"%d", len);
-    
-    for(int i=len-1;i>=0;i--)
-      fprintf(fp2,"%d ",route[i]);
-
-    
-
-    const uint32_t nWifi = 3, nAp = 3; 
+    const uint32_t nWifi = nodenum + 2, nAp = nodenum+2;
     NodeContainer wifiStaNodes;
-    wifiStaNodes.Create (nWifi);  
+    wifiStaNodes.Create (nWifi);
     NodeContainer wifiApNode;
-    wifiApNode.Create(nAp);   
+    wifiApNode.Create(nAp);
     
-    YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();   
-    YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();  
-    phy.SetChannel (channel.Create ());  
+    YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
+    YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();
+    phy.SetChannel (channel.Create ());
   
     WifiHelper wifi;
-    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");  
-  
+    wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
   
     WifiMacHelper mac; 
     Ssid ssid = Ssid ("ns-3-aqiao");  
@@ -503,11 +482,11 @@ main (int argc, char *argv[])
       serverApps.Stop (Seconds (100.0));
     }
   
-    for(uint k=0; k<nWifi; k++)
+    for(uint k=0; k<bridgenum+2; k++)
     {
-      VideoStreamClientHelper videoClient (apInterfaces.GetAddress (k), 5000);
+      VideoStreamClientHelper videoClient (apInterfaces.GetAddress (route[k][1]), 5000);
       ApplicationContainer clientApps =
-      videoClient.Install (wifiStaNodes.Get (k));
+      videoClient.Install (wifiStaNodes.Get (route[k][0]));
       clientApps.Start (Seconds (0.5));
       clientApps.Stop (Seconds (100.0));
     }
@@ -516,11 +495,79 @@ main (int argc, char *argv[])
   
     Simulator::Stop (Seconds (10.0));
   
-    phy.EnablePcap ("wifi-videoStream", apDevices.Get (0));
+    phy.EnablePcap ("wifi-videoStream", apDevices.Get (nWifi - 1));
     AnimationInterface anim("wifi-1-3.xml");
     Simulator::Run ();
     Simulator::Destroy ();
   }
+  else if (CASE == 6) {
+    NodeContainer nodes;
+    nodes.Create (nodenum + 2);
+    std::string delaytime;
+    bridgenum += 2;
 
+    std::vector<NodeContainer> linkvector(bridgenum);
+    for(uint i=0; i<bridgenum; i++){
+        linkvector[i] = NodeContainer(nodes.Get(route[i][0]),nodes.Get(route[i][1]));
+    }
+
+    //std::vector<PointToPointHelper> p2pvector(bridgeNum);
+    //for(uint i=0; i<bridgeNum; i++){
+    //    p2pvector[i].SetDeviceAttribute("DataRate", StringValue("1Mbps"));
+    //    delaytime = std::to_string(route[i][2])+"ms";
+    //    p2pvector[i].SetChannelAttribute("Delay", StringValue(delaytime));
+    //}
+    
+    PointToPointHelper pointToPoint;
+    pointToPoint.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
+    pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
+
+    std::vector<NetDeviceContainer> netvector(bridgenum);
+    for(uint i=0; i<bridgenum; i++){
+        netvector[i] = pointToPoint.Install(linkvector[i]);
+    }
+
+    InternetStackHelper stack;
+    stack.Install (nodes);
+
+    Ipv4AddressHelper address;
+    std::string address_value = "10.1.1.0";
+    for(uint i=0; i<bridgenum; i++){
+        int num = route[i][1];
+        address_value = "10.1."+std::to_string(num)+".0";
+        address.SetBase(Ipv4Address(address_value.c_str()), "255.255.255.0");
+        address.Assign(netvector[i]);
+    }
+
+    std::vector<Ipv4InterfaceContainer> interfacevector(bridgenum);
+    for(uint i=0; i<bridgenum; i++){
+        interfacevector[i] = address.Assign(netvector[i]);
+    }
+    
+    for(uint k=0; k<bridgenum; k++){
+        VideoStreamClientHelper videoClient (interfacevector[k].GetAddress (0), 5000);
+        ApplicationContainer clientApps = videoClient.Install (nodes.Get (route[k][0]));
+        clientApps.Start (Seconds (0.0));
+        clientApps.Stop (Seconds (100.0));
+    }
+
+    VideoStreamServerHelper videoServer (5000);
+    videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
+    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
+    // videoServer.SetAttribute ("FrameSize", UintegerValue (4096));
+    for(uint k=0; k<nodenum+2; k++){
+        ApplicationContainer serverApps = videoServer.Install(nodes.Get(k));
+        serverApps.Start(Seconds(0.0));
+        serverApps.Stop(Seconds(100.0));
+    }
+    
+    pointToPoint.EnablePcap("videoStream", netvector[0].Get(0),false);
+    
+    
+    Simulator::Run ();
+    Simulator::Destroy ();  
+  }
+
+  fin.close();
   return 0;
 }
