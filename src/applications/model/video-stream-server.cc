@@ -30,7 +30,7 @@ VideoStreamServer::GetTypeId (void)
     .SetGroupName("Applications")
     .AddConstructor<VideoStreamServer> ()
     .AddAttribute ("Interval", "The time to wait between packets",
-                    TimeValue (Seconds (0.01)),
+                    TimeValue (Seconds (0.02)),
                     MakeTimeAccessor (&VideoStreamServer::m_interval),
                     MakeTimeChecker ())
     .AddAttribute ("Port", "Port on which we listen for incoming packets.",
@@ -268,23 +268,24 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
         newClient->m_videoLevel = 3;
         newClient->m_address = from;
         newClient->m_sendEvent = EventId ();
-        m_clients[ipAddr] = newClient;
-        newClient->m_sendEvent = Simulator::Schedule (Seconds (0.0), &VideoStreamServer::Send, this, ipAddr);
-        newClient->m_lastSeq = 0;
 
         // read first got packet to determine it is RTP client or not.
         uint8_t dataBuffer[10];
         packet->CopyData (dataBuffer, 10);
         uint16_t det;
         sscanf ((char *) dataBuffer, "%hu", &det);
-        if (det == 0)
+        if (det == 2)
           newClient->m_isRTP = false;
         else if (det == 1)
         {
           newClient->m_isRTP = true;
-          m_maxRtpQueueLen = 1000;
+          m_maxRtpQueueLen = 10000;
           newClient->m_queue = new std::list<Packet>;
         }
+        
+        m_clients[ipAddr] = newClient;
+        newClient->m_sendEvent = Simulator::Schedule (Seconds (0.0), &VideoStreamServer::Send, this, ipAddr);
+        newClient->m_lastSeq = 0;
 		
 		    m_lastTime[ipAddr] = Simulator::Now ().GetSeconds ();
       }
@@ -299,23 +300,26 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
           RtpHeader hdr;
           packet->RemoveHeader (hdr);
           lostSeq = hdr.GetSquence ();
-
           if(lostSeq > 0)
           {
+            
+            NS_LOG_INFO ("Client " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " lost seq " << lostSeq );
             RtpHeader pivHdr;
             std::list<Packet>::iterator iter = currentClient->m_queue->begin ();
             iter->PeekHeader (pivHdr);
+            uint32_t pivSeq = pivHdr.GetSquence ();
 
-            while (pivHdr.GetSquence () < lostSeq)
+            while (pivSeq < lostSeq)
             {
               iter ++;
               iter->PeekHeader (pivHdr);
+              pivSeq = pivHdr.GetSquence ();
             }
 
-            Packet retransPacket = *iter;
+            Ptr<Packet> retransPacket = Ptr<Packet>(&(*iter));
 
-            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server retransmit lost sequence " << lostSeq << " to " << ipAddr);
-            if (m_socket->SendTo (&retransPacket, 0, currentClient->m_address) < 0)
+            NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server retransmit lost sequence " << pivSeq << " to " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+            if (m_socket->SendTo (retransPacket, 0, currentClient->m_address) < 0)
             {
               NS_LOG_INFO ("Error while retransmit seq " << lostSeq << " to " << ipAddr);
             }
@@ -332,8 +336,10 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
           return;		//do nothing
         }
         if (videoLevel == (unsigned short int) 11){		// if it is death signal
+          NS_LOG_INFO("Stop signal from client " << InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
           Simulator::Cancel (currentClient->m_sendEvent);		//stop sending
           m_clients.erase (ipAddr);
+          m_lastTime.erase (ipAddr);
           delete currentClient->m_queue;
           delete currentClient;
           return;

@@ -59,7 +59,7 @@ VideoStreamClient::VideoStreamClient ()
   m_rebufferCounter = 0;
   m_bufferEvent = EventId();
   m_sendEvent = EventId();
-  m_reReqDelay = 100;
+  m_reReqDelay = 20000;
   m_minSeq = 1;
   m_maxSeq = 0;
 }
@@ -163,6 +163,7 @@ VideoStreamClient::StopApplication ()
     }
 
     m_socket->Send (lastPacket);
+    NS_LOG_INFO("Stop signal sent from client");
     m_socket->Close ();
     m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket>> ());
     m_socket = 0;
@@ -189,7 +190,7 @@ VideoStreamClient::Send (void)
 
   uint8_t dataBuffer[10];
 
-  uint8_t sig = 0;
+  uint8_t sig = 2;
   if(m_isRTP) // rtp client라는 것을 1 signal로 서버에 알림.
     sig = 1;
 
@@ -280,10 +281,10 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
         packet->RemoveHeader (hdr);
         recvSeq = hdr.GetSquence ();
         recvLastSeq = hdr.GetLastFrameSquence ();
-
         // missing packet entered, then pop
-        if (m_missingQueue.count(recvSeq) != 0)
+        if (m_missingQueue.begin()->first == recvSeq)
         {
+          NS_LOG_INFO("Requested retransmission seq=" << recvSeq <<" in");
           m_missingQueue.erase(recvSeq);
         }
 
@@ -316,7 +317,9 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
             {
               complete = false;
               if (m_missingQueue.count (i) == 0)
-                m_missingQueue[i] = Simulator::Now ().GetMicroSeconds();
+                NS_LOG_INFO("Missing packet seq = " << i);
+                m_missingQueue[i] = Simulator::Now ().GetMicroSeconds() - m_reReqDelay*2; // quick first retransmit, then delay
+              break;
             }
           }
           // if it is complete, add up the frame.
@@ -375,20 +378,27 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
       if (m_isRTP)
       {
         RtpHeader hdr;
-        uint32_t wantToRetrans;
+        uint32_t wantToRetrans = 0;
         if (!m_missingQueue.empty ())
         {
+          
           std::map<uint32_t, int64_t> :: iterator iter = m_missingQueue.begin ();
-          wantToRetrans = iter->first;
+          uint32_t RetransSeq = iter->first;
+          NS_LOG_INFO ("Client missing some seq " << RetransSeq);
+
           if (Simulator::Now ().GetMicroSeconds () > iter->second + m_reReqDelay)
           {
+            wantToRetrans = RetransSeq;
             hdr.SetSquence (wantToRetrans);
-            iter->second = Simulator::Now ().GetMicroSeconds ();
+
+            m_missingQueue.erase(RetransSeq);
+            m_missingQueue[RetransSeq] = Simulator::Now ().GetMicroSeconds ();
           }
         }
 
         alivePacket->AddHeader (hdr);
-        NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client requested to retransmit seq " << wantToRetrans << " to " <<  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
+        if (wantToRetrans != 0)
+          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s client requested to retransmit seq " << wantToRetrans << " to " <<  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort ());
           
       }
 
