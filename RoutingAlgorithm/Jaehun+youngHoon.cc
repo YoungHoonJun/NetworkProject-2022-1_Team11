@@ -77,17 +77,18 @@ void dijkstra(uint32_t start) {
  * 5. New system(wi-fi)
  * 6. New system(p2p)
  */
-#define CASE 5
+uint32_t CASE = 5;
 
 NS_LOG_COMPONENT_DEFINE ("VideoStreamTest");
 
 int main (int argc, char *argv[]) {
   CommandLine cmd;
+  cmd.AddValue("case", "Integer from 1 to 6", CASE);
   cmd.Parse (argc, argv);
 
   const uint32_t start = 0;
 
-  ifstream fin("ns-3.29/scratch/input.txt");
+  ifstream fin("./scratch/videoStreamer/input.txt");
   string line;
   getline(fin, line);
   nodenum = line[0] - '0';
@@ -118,7 +119,7 @@ int main (int argc, char *argv[]) {
   routes.push_back(0);
   uint32_t len = routes.size();
   vector<vector<int>> route = {};
-
+  
   for(uint32_t i = len-1; i >= 1; i--){
       vector<int> v_temp = {};
       const uint32_t temp1 = routes[i];
@@ -129,6 +130,14 @@ int main (int argc, char *argv[]) {
       route.push_back(v_temp);
       printf("%d %d\n", temp1, temp2);
   }
+  vector<int> v_temp = {};
+  const uint32_t temp1 = nodenum;
+  const uint32_t temp2 = nodenum + 1;
+
+  v_temp.push_back(temp1);
+  v_temp.push_back(temp2);
+
+  route.push_back(v_temp);
   // return 0;
 
   Time::SetResolution (Time::NS);
@@ -405,7 +414,7 @@ int main (int argc, char *argv[]) {
   }
   else if (CASE == 5)
   {
-    const uint32_t nWifi = nodenum + 2, nAp = len;
+    const uint32_t nWifi = nodenum + 2, nAp = nodenum+2;
     NodeContainer wifiStaNodes;
     wifiStaNodes.Create (nWifi);
     NodeContainer wifiApNode;
@@ -492,7 +501,71 @@ int main (int argc, char *argv[]) {
     Simulator::Destroy ();
   }
   else if (CASE == 6) {
-      //seung++
+    NodeContainer nodes;
+    nodes.Create (nodenum + 2);
+    std::string delaytime;
+    bridgenum += 2;
+
+    std::vector<NodeContainer> linkvector(bridgenum);
+    for(uint i=0; i<bridgenum; i++){
+        linkvector[i] = NodeContainer(nodes.Get(route[i][0]),nodes.Get(route[i][1]));
+    }
+
+    //std::vector<PointToPointHelper> p2pvector(bridgeNum);
+    //for(uint i=0; i<bridgeNum; i++){
+    //    p2pvector[i].SetDeviceAttribute("DataRate", StringValue("1Mbps"));
+    //    delaytime = std::to_string(route[i][2])+"ms";
+    //    p2pvector[i].SetChannelAttribute("Delay", StringValue(delaytime));
+    //}
+    
+    PointToPointHelper pointToPoint;
+    pointToPoint.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
+    pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
+
+    std::vector<NetDeviceContainer> netvector(bridgenum);
+    for(uint i=0; i<bridgenum; i++){
+        netvector[i] = pointToPoint.Install(linkvector[i]);
+    }
+
+    InternetStackHelper stack;
+    stack.Install (nodes);
+
+    Ipv4AddressHelper address;
+    std::string address_value = "10.1.1.0";
+    for(uint i=0; i<bridgenum; i++){
+        int num = route[i][1];
+        address_value = "10.1."+std::to_string(num)+".0";
+        address.SetBase(Ipv4Address(address_value.c_str()), "255.255.255.0");
+        address.Assign(netvector[i]);
+    }
+
+    std::vector<Ipv4InterfaceContainer> interfacevector(bridgenum);
+    for(uint i=0; i<bridgenum; i++){
+        interfacevector[i] = address.Assign(netvector[i]);
+    }
+    
+    for(uint k=0; k<bridgenum; k++){
+        VideoStreamClientHelper videoClient (interfacevector[k].GetAddress (0), 5000);
+        ApplicationContainer clientApps = videoClient.Install (nodes.Get (route[k][0]));
+        clientApps.Start (Seconds (0.0));
+        clientApps.Stop (Seconds (100.0));
+    }
+
+    VideoStreamServerHelper videoServer (5000);
+    videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
+    videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
+    // videoServer.SetAttribute ("FrameSize", UintegerValue (4096));
+    for(uint k=0; k<nodenum+2; k++){
+        ApplicationContainer serverApps = videoServer.Install(nodes.Get(k));
+        serverApps.Start(Seconds(0.0));
+        serverApps.Stop(Seconds(100.0));
+    }
+    
+    pointToPoint.EnablePcap("videoStream", netvector[0].Get(0),false);
+    
+    
+    Simulator::Run ();
+    Simulator::Destroy ();  
   }
 
   fin.close();
