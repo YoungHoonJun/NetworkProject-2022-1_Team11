@@ -49,7 +49,7 @@ main (int argc, char *argv[])
 	NodeContainer n0n2 = NodeContainer(nodes.Get(0), nodes.Get(2));
 
     PointToPointHelper pointToPoint;
-    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
+    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1000Mbps"));
     pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
     NetDeviceContainer devices_0;
@@ -71,13 +71,13 @@ main (int argc, char *argv[])
     VideoStreamClientHelper videoClient (interfaces_0.GetAddress (1), 5000);
     ApplicationContainer clientApp_1 = videoClient.Install (nodes.Get (0));
     clientApp_1.Start (Seconds (0.5));
-    clientApp_1.Stop (Seconds (2.0));
+    clientApp_1.Stop (Seconds (70.0));
 
 	videoClient.SetAttribute ("RemoteAddress", AddressValue(interfaces_1.GetAddress(1)) );
 	videoClient.SetAttribute ("RemotePort", UintegerValue(5000));
 	ApplicationContainer clientApp_2 = videoClient.Install (nodes.Get (0));
-	clientApp_2.Start (Seconds (8.0));
-	clientApp_2.Stop (Seconds (10.0));
+	clientApp_2.Start (Seconds (0.0));
+	clientApp_2.Stop (Seconds (0.5));
 
 
     VideoStreamServerHelper videoServer (5000);
