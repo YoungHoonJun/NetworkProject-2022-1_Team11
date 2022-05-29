@@ -2,7 +2,7 @@
 This project is an Application using NS-3
 
 ## Subject
-    This project's main purpose is to improve the performance of video streaming. We implemented three functions as below for the performamce improvement.
+This project's main purpose is to improve the performance of video streaming. We implemented three functions as below for the performamce improvement.
 
 ### RTP
 #### Routing Algorithm
