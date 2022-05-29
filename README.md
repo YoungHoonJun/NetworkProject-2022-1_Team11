@@ -1,8 +1,13 @@
 # NetworkProject-2022-1_Team11
 This project is an Application using NS-3
 
+
+## Installation
+### Prerequisites
+ns-3 (version 3.29),
 ## Subject
 This project's main purpose is to improve the performance of video streaming. We implemented three functions as below for the performamce improvement.
+
 
 ### RTP
 #### Routing Algorithm
@@ -42,6 +47,6 @@ wifi 코드와 비슷한 방식으로 클라이언트를 제외한 나머지 노
 
 2. Server는 요청받은 sequence 포함 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송.
 
-## Retransmit은 최대 1회만 요청, 서버는 queue가 차면 oldest packet을 dequeue 하고 새로 enqueue.
+###### Retransmit은 최대 1회만 요청, 서버는 queue가 차면 oldest packet을 dequeue 하고 새로 enqueue.
 
 ### Realiable Streaming
