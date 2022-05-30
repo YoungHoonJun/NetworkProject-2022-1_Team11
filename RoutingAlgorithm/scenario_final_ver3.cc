@@ -135,6 +135,8 @@ int main (int argc, char *argv[])
   v_temp.push_back(temp2);
   v_temp.push_back(temp3);
   route.push_back(v_temp);
+  len = route.size();
+  bridgeNum = len;
   printf("%u %u %u---\n", temp1, temp2, temp3);
 
   Time::SetResolution (Time::NS);
@@ -146,12 +148,13 @@ int main (int argc, char *argv[])
       
     const uint32_t nWifi = nodeNum + 2, nAp = nodeNum + 2;
     printf("%u : %u : %u", bridgeNum, nAp, nAp);
+    printf("1\n");
     NodeContainer wifiStaNodes;
     wifiStaNodes.Create (nWifi);
     NodeContainer wifiApNode;
     wifiApNode.Create(nAp);
     printf("%u : %u : %u", bridgeNum, nAp, nAp);
-    
+    printf("2\n");
     YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
     YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();
     phy.SetChannel (channel.Create ());
@@ -206,16 +209,19 @@ int main (int argc, char *argv[])
     videoServer.SetAttribute ("FrameFile", StringValue ("./scratch/videoStreamer/small.txt"));
     
     printf("%u : %u : %u", bridgeNum, nAp, nAp);
-    for(uint m=0; m<nAp; m++)
+    printf("3\n");
+    for(uint32_t m=0; m<nAp; m++)
     {
       ApplicationContainer serverApps = videoServer.Install (wifiApNode.Get (m));
       serverApps.Start (Seconds (0.0));
       serverApps.Stop (Seconds (100.0));
     }
     printf("%u : %u : %u", bridgeNum, nAp, nAp);
-    for(uint k=0; k<bridgeNum; k++)
+    printf("4\n");
+    for(uint32_t k=0; k<bridgeNum; k++)
     {
       printf("%u : %u : %u", route[k][0], route[k][0], route[k][0]);
+      printf("5\n");
       VideoStreamClientHelper videoClient (apInterfaces.GetAddress (route[k][1]), 5000);
       ApplicationContainer clientApps =
       videoClient.Install (wifiStaNodes.Get (route[k][0]));
