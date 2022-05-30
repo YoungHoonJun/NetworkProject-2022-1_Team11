@@ -28,6 +28,7 @@ This project's main purpose is to improve the performance of video streaming. We
 출발지로부터 목적지까지의 최단 거리와 경로를 출력
 
 2. Connection (Wi-Fi)
+-----
 
 3. Connection (P2P)
 txt 파일에 있는 값들을 받아
@@ -40,13 +41,14 @@ wifi와 거의 동일한 전처리 과정을 거칩니다.
 wifi 코드와 비슷한 방식으로 클라이언트를 제외한 나머지 노드에 서버를, 서버를 제외한 나머지 노드에 클라이언트를 깔아
 통신합니다.
 
-##### simple_rtp rule
+#### simple_rtp rule
 0. RTP header를 통해 sequence 번호 같이 전달. (seq 0은 non-request signal)
-
 1. Client에서 빠진 packet Sequence 검출해 해당 sequence 서버에 요청
-
 2. Server는 요청받은 sequence 포함 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송.
 
-###### Retransmit은 최대 1회만 요청, 서버는 queue가 차면 oldest packet을 dequeue 하고 새로 enqueue.
-
-### Realiable Streaming
+#### Realiable Streaming
+0. Framefile 에 사진들의 이름이 적혀있음.
+1. 25(frameRate)개의 사진(frame)이 모여 1초의 동영상을 전달하는 것으로 취급됨.
+2. 1 frame은 여러개의 Sequence로 이루어져 있음. 서버의 seq를 보낼 때 frame이 몇 sequence로 이루어졌는지도 보냄. (frameLastSeq)
+3. 정기적으로 client 쪽에서 missing Seq을 서버로 보냄 (있다면)
+4. frameLastSeq를 보고 client 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장.
