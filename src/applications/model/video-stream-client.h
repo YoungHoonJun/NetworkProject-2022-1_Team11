@@ -11,6 +11,7 @@
 
 #include <map>
 #include <queue>
+#include <atomic>
 
 #define MAX_VIDEO_LEVEL 6
 
@@ -54,12 +55,14 @@ protected:
 private: 
   virtual void StartApplication (void);
   virtual void StopApplication (void);
-  virtual void ChangeServer(Address s_ip, uint16_t s_port);
   /**
    * @brief Send the packet to the remote server.
    */
   void Send (void);
-
+	/**
+	 * @regular missing packet send to Server
+	 */
+	void SendMissingSignal(void);
   /**
    * @brief Read data from the frame buffer. If the buffer does not have 
    * enough frames, it will reschedule the reading event next second.
@@ -89,17 +92,23 @@ private:
   uint32_t m_frameSize; //!< Total size of packets from one frame
   uint32_t m_lastRecvFrame; //!< Last received frame number
   uint32_t m_lastBufferSize; //!< Last size of the buffer
-  uint32_t m_currentBufferSize; //!< Size of the frame buffer
+	std::atomic <uint32_t> m_currentBufferSize; //!< Size of the frame buffer
 
   EventId m_bufferEvent; //!< Event to read from the buffer
   EventId m_sendEvent; //!< Event to send data to the server
+	EventId m_sendMissingSignalEvent; //!< Event to regualrly sending the missing packet Seq
   // below are for RTP implementation
   int64_t m_reReqDelay; // !< re-Request delay for retransmition (us)
   uint32_t m_minSeq; //!< min seq on packetBuffer
   uint32_t m_maxSeq; //!< max seq on packetBuffer
   std::queue<uint32_t> m_lastSeqQueue; //!< last seq num of each frame
-  std::map<uint32_t, int64_t> m_missingQueue; //!< last seq num of each frame
+  std::map<uint32_t, int64_t> m_missingQueue; //!< Queue (but the length is 1) for reasking the missing packet
   std::map<uint32_t, Packet> m_packetBuffer; //!< Packet buffer for RTP (key = seq num.)
+
+	std::queue<uint8_t*> m_frameBuffer; //!< frame buffer. each frame is up to 10MB
+	std::queue<uint32_t> m_frameBufferSize; //!< Size of each frame
+
+	uint32_t m_frameSec; //!< indicating when the frame appears in video
   bool m_isRTP; //!< True if Client is using Real-time protocol
 
 };

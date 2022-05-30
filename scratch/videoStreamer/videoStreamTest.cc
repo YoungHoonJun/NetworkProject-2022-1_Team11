@@ -45,17 +45,17 @@ main (int argc, char *argv[])
   {
     NodeContainer nodes;
     nodes.Create (3);
-	NodeContainer n0n1 = NodeContainer(nodes.Get(0), nodes.Get(1));
-	NodeContainer n0n2 = NodeContainer(nodes.Get(0), nodes.Get(2));
+		NodeContainer n0n1 = NodeContainer(nodes.Get(0), nodes.Get(1));
+		NodeContainer n0n2 = NodeContainer(nodes.Get(0), nodes.Get(2));
 
     PointToPointHelper pointToPoint;
-    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1000Mbps"));
+    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("10Mbps"));
     pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
     NetDeviceContainer devices_0;
-	NetDeviceContainer devices_1;
+		NetDeviceContainer devices_1;
     devices_0 = pointToPoint.Install (n0n1);
-	devices_1 = pointToPoint.Install (n0n2);
+		devices_1 = pointToPoint.Install (n0n2);
 
     InternetStackHelper stack;
     stack.Install (nodes);
@@ -64,20 +64,20 @@ main (int argc, char *argv[])
     address.SetBase ("10.1.1.0", "255.255.255.0");
     Ipv4InterfaceContainer interfaces_0 = address.Assign (devices_0);
 
-	address.SetBase ("10.1.2.0", "255.255.255.0");
-	Ipv4InterfaceContainer interfaces_1 = address.Assign (devices_1);
+		address.SetBase ("10.1.2.0", "255.255.255.0");
+		Ipv4InterfaceContainer interfaces_1 = address.Assign (devices_1);
 
 
     VideoStreamClientHelper videoClient (interfaces_0.GetAddress (1), 5000);
     ApplicationContainer clientApp_1 = videoClient.Install (nodes.Get (0));
     clientApp_1.Start (Seconds (0.5));
-    clientApp_1.Stop (Seconds (70.0));
+    clientApp_1.Stop (Seconds (800.0));
 
-	videoClient.SetAttribute ("RemoteAddress", AddressValue(interfaces_1.GetAddress(1)) );
-	videoClient.SetAttribute ("RemotePort", UintegerValue(5000));
-	ApplicationContainer clientApp_2 = videoClient.Install (nodes.Get (0));
-	clientApp_2.Start (Seconds (0.0));
-	clientApp_2.Stop (Seconds (0.5));
+		//videoClient.SetAttribute ("RemoteAddress", AddressValue(interfaces_1.GetAddress(1)) );
+		//videoClient.SetAttribute ("RemotePort", UintegerValue(5000));
+		//ApplicationContainer clientApp_2 = videoClient.Install (nodes.Get (0));
+		//clientApp_2.Start (Seconds (0.0));
+		//clientApp_2.Stop (Seconds (0.5));
 
 
     VideoStreamServerHelper videoServer (5000);
@@ -88,15 +88,15 @@ main (int argc, char *argv[])
     ApplicationContainer serverApp_1 = videoServer.Install (nodes.Get (1));
 	
     serverApp_1.Start (Seconds (0.0));
-    serverApp_1.Stop (Seconds (100.0));
+    serverApp_1.Stop (Seconds (800.0));
 
-	ApplicationContainer serverApp_2 = videoServer.Install (nodes.Get (2));
+		//ApplicationContainer serverApp_2 = videoServer.Install (nodes.Get (2));
 
-	serverApp_2.Start (Seconds (0.0));
-	serverApp_2.Stop (Seconds (100.0));
+		//serverApp_2.Start (Seconds (0.0));
+		//serverApp_2.Stop (Seconds (2000.0));
 
     pointToPoint.EnablePcap ("videoStream", devices_0.Get(1), false);
-	pointToPoint.EnablePcap ("videoStream", devices_1.Get(1), false);
+		pointToPoint.EnablePcap ("videoStream", devices_1.Get(1), false);
     Simulator::Run ();
     Simulator::Destroy ();
   }
@@ -109,7 +109,7 @@ main (int argc, char *argv[])
     NodeContainer n0n2= NodeContainer (nodes.Get(0), nodes.Get(2));
 
     PointToPointHelper pointToPoint;
-    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("2Mbps"));
+    pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("200Mbps"));
     pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
     NetDeviceContainer d0d1= pointToPoint.Install (n0n1);
@@ -132,12 +132,12 @@ main (int argc, char *argv[])
     VideoStreamClientHelper videoClient1 (i0i1.GetAddress (0), 5000);
     ApplicationContainer clientApp1 = videoClient1.Install (nodes.Get (1));
     clientApp1.Start (Seconds (1.0));
-    clientApp1.Stop (Seconds (100.0));
+    clientApp1.Stop (Seconds (2000.0));
 
     VideoStreamClientHelper videoClient2 (i0i2.GetAddress (0), 5000);
     ApplicationContainer clientApp2 = videoClient2.Install (nodes.Get (2));
     clientApp2.Start (Seconds (0.5));
-    clientApp2.Stop (Seconds (100.0));
+    clientApp2.Stop (Seconds (2000.0));
 
     VideoStreamServerHelper videoServer (5000);
     videoServer.SetAttribute ("MaxPacketSize", UintegerValue (1400));
@@ -146,7 +146,7 @@ main (int argc, char *argv[])
 
     ApplicationContainer serverApp = videoServer.Install (nodes.Get (0));
     serverApp.Start (Seconds (0.0));
-    serverApp.Stop (Seconds (100.0));
+    serverApp.Stop (Seconds (2000.0));
 
     pointToPoint.EnablePcap ("videoStream", d0d1.Get (1), false);
     pointToPoint.EnablePcap ("videoStream", d0d2.Get (1), false);

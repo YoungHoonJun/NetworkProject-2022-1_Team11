@@ -41,6 +41,7 @@ class Packet;
      * 
       * @param frameFile the file name
      */
+		void SetFrameData (std::string line, std::string path, std::string arg);
     void SetFrameFile (std::string frameFile);
 
     /**
@@ -84,16 +85,22 @@ class Packet;
       //below members are for RTP
       uint32_t m_lastSeq; //! Last sent sequence for RTP
       uint32_t m_FrameLastSeq; //! Last sequence for current frame
-      std::list<Packet>* m_queue; //! Queue for sent packet (implemented on stl::list to search on it.)
+      std::list<Ptr<Packet>>* m_queue; //! Queue for sent packet (implemented on stl::list to search on it.)
       bool m_isRTP; //! True if Client requires RTP
     } ClientInfo; //! To be compatible with C language
+		
+		typedef struct Frame
+		{
+			uint8_t* m_frameData;
+			uint32_t m_dataSize;
+		} Frame;
 
     /**
      * @brief Send a packet with specified size.
      * 
      * @param packetSize the number of bytes for the packet to be sent
      */
-    void SendPacket (ClientInfo *client, uint32_t packetSize);
+    void SendPacket (ClientInfo *client, uint32_t packetSize, uint32_t i, uint32_t curFrameVideoRate);
     
     /**
      * @brief Send the video frame to the given ipv4 address.
@@ -122,9 +129,12 @@ class Packet;
 
     uint32_t m_frameRate; //!< Number of frames per second to be sent
     uint32_t m_videoLength; //!< Length of the video in seconds
-    std::string m_frameFile; //!< Name of the file containing frame sizes
+    std::vector<std::string> m_frameNameList; //!< Name of list of the file name containing frame sizes
+		std::unordered_map <std::string, Frame*> m_frames; //!< list of contents of the frame
+
     std::vector<uint32_t> m_frameSizeList; //!< List of video frame sizes
-    
+		std::string m_frameFile; //!< directory name in file system (consists frame name list per sec)
+
     std::unordered_map<uint32_t, ClientInfo*> m_clients; //!< Information saved for each client
 	  std::unordered_map<uint32_t, double> m_lastTime; //!< Time when recieved last packet for each client
     const uint32_t m_frameSizes[6] = {0, 230400, 345600, 921600, 2073600, 2211840}; //!< Frame size for 360p, 480p, 720p, 1080p and 2K
