@@ -14,6 +14,42 @@
 
 using namespace ns3;
 using namespace std;
+#define INF 1e9
+
+uint32_t n, m, start;
+
+vector<pair<uint32_t, uint32_t>> graph[100001];
+
+uint32_t d[100001];
+uint32_t from[100001];
+uint32_t nodenum, bridgenum;
+
+void dijkstra(uint32_t start) {
+    priority_queue<pair<uint32_t, uint32_t>> pq; 
+
+    pq.push({ 0, start });
+    d[start] = 0;
+
+    while (!pq.empty()) {
+        uint32_t dist = -pq.top().first;
+        uint32_t now = pq.top().second;
+        pq.pop();
+
+        if (dist > d[now]) continue;
+
+        for (uint32_t i = 0; i < graph[now].size(); i++){
+            uint32_t next = graph[now][i].first;
+            uint32_t cost = dist + graph[now][i].second;
+
+            if (cost < d[next]) {
+                d[next] = cost;
+                pq.push(make_pair(-cost, next));
+
+                from[next] = now;
+            }
+        }
+    } 
+}
 
 //#define NS3_LOG_ENABLE
 
@@ -23,7 +59,7 @@ using namespace std;
  * 2. New system(p2p)
 **/
 
-#define CASE 1
+#define CASE 2
 
 NS_LOG_COMPONENT_DEFINE ("VideoStreamTest");
 
@@ -36,7 +72,7 @@ int main (int argc, char *argv[])
   string line;
   vector<vector<int>> route = {};
 
-  route.push_back({0, 1});
+  route.push_back({0, 1, 1});
 
   getline(fin, line);
   const uint32_t nodeNum = line[0] - '0';
@@ -45,24 +81,28 @@ int main (int argc, char *argv[])
   while (!fin.eof()) {
     getline(fin, line);
 
-    vector<int> v_temp = {};
+    std::vector<int> v_temp = {};
 
     const uint32_t temp1 = line[0] - '0';
     const uint32_t temp2 = line[2] - '0';
+    const uint32_t temp3 = line[4] - '0';
 
     v_temp.push_back(temp1);
     v_temp.push_back(temp2);
+    v_temp.push_back(temp3);
 
     route.push_back(v_temp);
     
     if (fin.eof()) {
-      vector<int> v_temp = {};
+      std::vector<int> v_temp = {};
 
       const uint32_t temp1 = nodeNum;
       const uint32_t temp2 = nodeNum + 1;
+      const uint32_t temp3 = 1;
 
       v_temp.push_back(temp1);
       v_temp.push_back(temp2);
+      v_temp.push_back(temp3);
 
       route.push_back(v_temp);
     }
