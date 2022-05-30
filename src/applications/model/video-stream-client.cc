@@ -100,7 +100,7 @@ VideoStreamClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 	m_frameSec = 0;	
-
+	NS_LOG_INFO("START____________!!!");
   if (m_socket == 0)
   {
     TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -291,7 +291,7 @@ VideoStreamClient::ReadFromBuffer (void)
 			uint32_t targetFrameSize = m_frameBufferSize.front();
 		
 			NS_LOG_INFO ("Frame playing.. frameSeq:" << frameSeq << " targetFrameSize" << targetFrameSize);
-			std::string filePath = "./images/";
+			std::string filePath = "./scratch/videoStreamer/videos/";
 			std::string curPath = filePath + std::to_string(m_frameSec)+ "." + std::to_string(frameSeq) + ".png";
 			
 			FILE* fp;
@@ -420,6 +420,8 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
         }
       }
 			// below, in case of server dropping all later contents 
+			
+			/*
 			if (target > m_maxSeq)
 			{
 				if (m_missingQueue.empty())
@@ -435,6 +437,7 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
           }
         }
 			}
+			*/
 
       // sending 10 means the client is still alive
       uint8_t dataBuffer[10];
@@ -446,7 +449,6 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
 			uint32_t wantToRetrans = 0;
 			if (!m_missingQueue.empty ())
 			{
-				//*****************
 				NS_LOG_INFO("MISSING QUEUE SIZE: " << m_missingQueue.size());
 				std::map<uint32_t, int64_t> :: iterator iter = m_missingQueue.begin ();
 				uint32_t RetransSeq = iter->first;
@@ -459,7 +461,6 @@ VideoStreamClient::HandleRead (Ptr<Socket> socket)
 
 					m_missingQueue.erase(RetransSeq);
 					m_missingQueue[RetransSeq] = Simulator::Now ().GetMicroSeconds ();
-					// for experiment **************************************
 				}
 			}
 

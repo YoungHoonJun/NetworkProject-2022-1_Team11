@@ -80,7 +80,6 @@ void
 VideoStreamServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
-
   if (m_socket == 0)
   {
     TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -106,6 +105,7 @@ VideoStreamServer::StartApplication (void)
 
   m_socket->SetAllowBroadcast (true);
   m_socket->SetRecvCallback (MakeCallback (&VideoStreamServer::HandleRead, this));
+	NS_LOG_INFO("IM ALIVE");
 }
 
 void
@@ -297,6 +297,8 @@ VideoStreamServer::HandleRead (Ptr<Socket> socket)
   Ptr<Packet> packet;
   Address from;
   Address localAddress;
+
+	NS_LOG_INFO("SIGNAL CAME");
   while ((packet = socket->RecvFrom (from)))
   {
     socket->GetSockName (localAddress);

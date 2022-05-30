@@ -1,7 +1,0 @@
-0. RTP header를 통해 sequence 번호 같이 전달. (seq 0은 non-request signal)
-
-1. Client에서 빠진 packet Sequence 검출해 해당 sequence 서버에 요청
-
-2. Server는 요청받은 sequence 포함 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송.
-
-## Retransmit은 최대 1회만 요청, 서버는 queue가 차면 oldest packet을 dequeue 하고 새로 enqueue. 

@@ -15,8 +15,6 @@ def build(bld):
         'model/udp-echo-server.cc',
         'model/video-stream-client.cc',
         'model/video-stream-server.cc',
-		'model/mos-server.cc',
-		'model/mos-client.cc',
         'model/application-packet-probe.cc',
         'model/three-gpp-http-client.cc',
         'model/three-gpp-http-server.cc',
@@ -28,7 +26,6 @@ def build(bld):
         'helper/udp-client-server-helper.cc',
         'helper/udp-echo-helper.cc',
         'helper/video-stream-helper.cc',
-		'helper/mos-helper.cc',
         'helper/three-gpp-http-helper.cc',
         ]
 
@@ -53,8 +50,6 @@ def build(bld):
         'model/udp-echo-server.h',
         'model/video-stream-client.h',
         'model/video-stream-server.h',
-		'model/mos-client.h',
-		'model/mos-server.h',
         'model/application-packet-probe.h',
         'model/three-gpp-http-client.h',
         'model/three-gpp-http-server.h',
@@ -66,7 +61,6 @@ def build(bld):
         'helper/udp-client-server-helper.h',
         'helper/udp-echo-helper.h',
         'helper/video-stream-helper.h',
-		'helper/mos-helper.h',
         'helper/three-gpp-http-helper.h'
         ]
     

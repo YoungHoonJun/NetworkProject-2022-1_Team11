@@ -20,7 +20,6 @@ swings
 swings
 swings
 swings
-swings
 samjang
 samjang
 swings
@@ -97,4 +96,5 @@ samjang
 samjang
 samjang
 swings
+samjang
 samjang
