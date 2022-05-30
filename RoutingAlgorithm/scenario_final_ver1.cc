@@ -22,7 +22,7 @@ vector<pair<uint32_t, uint32_t>> graph[100001];
 
 uint32_t d[100001];
 uint32_t from[100001];
-uint32_t nodenum, bridgenum;
+uint32_t cost[1001][1001];
 
 void dijkstra(uint32_t start) {
     priority_queue<pair<uint32_t, uint32_t>> pq; 
@@ -70,43 +70,60 @@ int main (int argc, char *argv[])
 
   ifstream fin("./scratch/videoStreamer/input.txt");
   string line;
-  vector<vector<int>> route = {};
-
-  route.push_back({0, 1, 1});
-
   getline(fin, line);
-  const uint32_t nodeNum = line[0] - '0';
-  const uint32_t bridgeNum = line[2] - '0';
+  uint32_t nodeNum = line[0] - '0';
+  uint32_t bridgeNum = line[2] - '0';
 
-  while (!fin.eof()) {
-    getline(fin, line);
 
-    std::vector<int> v_temp = {};
+  for(uint32_t i = 0; i <bridgeNum; i++){
+      getline(fin, line);
+      uint32_t temp1 = line[0] - '0';
+      uint32_t temp2 = line[2] - '0';
+      uint32_t temp3 = line[4] - '0';
+      // node a -> node b, cost c
+      graph[temp1].push_back({temp2,temp3});
+      graph[temp2].push_back({temp1,temp3});
+      cost[temp1][temp2] = cost[temp2][temp1] = temp3;
+  }
+  fill(d, d+100001, INF);
+  start = 0;
+  dijkstra(start);
+  vector<uint32_t> routes;
+  uint32_t temp = nodeNum - 1;
 
-    const uint32_t temp1 = line[0] - '0';
-    const uint32_t temp2 = line[2] - '0';
-    const uint32_t temp3 = line[4] - '0';
-
-    v_temp.push_back(temp1);
-    v_temp.push_back(temp2);
-    v_temp.push_back(temp3);
-
-    route.push_back(v_temp);
-    
-    if (fin.eof()) {
-      std::vector<int> v_temp = {};
-
-      const uint32_t temp1 = nodeNum;
-      const uint32_t temp2 = nodeNum + 1;
-      const uint32_t temp3 = 1;
+  // routes.push_back(nodeNum);
+  while(temp){
+      routes.push_back(temp);
+      temp = from[temp];
+  }
+  routes.push_back(0);
+  uint32_t len = routes.size()-1;
+  vector<vector<uint32_t>> route = {};
+  bridgeNum = len;
+  // printf("%u %u\n", nodeNum, len);
+  for(uint32_t i = len; i >= 1; i--){
+      vector<uint32_t> v_temp = {};
+      const uint32_t temp1 = routes[i];
+      const uint32_t temp2 = routes[i-1];
+      const uint32_t temp3 = cost[temp1][temp2];
 
       v_temp.push_back(temp1);
       v_temp.push_back(temp2);
       v_temp.push_back(temp3);
-
       route.push_back(v_temp);
-    }
+      // printf("%u %u %u\n", temp1, temp2, temp3);
   }
+  vector<uint32_t> v_temp = {};
+  const uint32_t temp1 = nodeNum-1;
+  const uint32_t temp2 = nodeNum;
+  const uint32_t temp3 = 1;
+
+  v_temp.push_back(temp1);
+  v_temp.push_back(temp2);
+  v_temp.push_back(temp3);
+  // printf("%u %u %u\n", temp1, temp2, temp3);
+  route.push_back(v_temp);
+  // return 0;
 
   Time::SetResolution (Time::NS);
   LogComponentEnable ("VideoStreamClientApplication", LOG_LEVEL_INFO);
