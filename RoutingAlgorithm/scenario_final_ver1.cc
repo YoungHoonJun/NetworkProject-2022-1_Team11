@@ -97,7 +97,7 @@ int main (int argc, char *argv[])
       temp = from[temp];
   }
   routes.push_back(0);
-  uint32_t len = routes.size()-1;
+  uint32_t len = routes.size();
   vector<vector<uint32_t>> route = {};
   bridgeNum = len;
   // printf("%u %u\n", nodeNum, len);
@@ -219,16 +219,18 @@ int main (int argc, char *argv[])
     NodeContainer nodes;
     nodes.Create (nodeNum + 2);
     std::string delaytime;
-    const uint32_t bridgenum = bridgeNum + 2;
-
+    const uint32_t bridgenum = bridgeNum + 1;
     std::vector<NodeContainer> linkvector(bridgenum);
+    // printf("%u", bridgenum);
     for(uint i=0; i<bridgenum; i++){
+        // printf("%u %u\n", route[i][0], route[i][1]);
         linkvector[i] = NodeContainer(nodes.Get(route[i][0]),nodes.Get(route[i][1]));
     }
 
     // dif delay
     std::vector<PointToPointHelper> p2pvector(bridgeNum);
     for(uint i=0; i<bridgeNum; i++){
+        // printf("%u\n", route[i][2]);
        p2pvector[i].SetDeviceAttribute("DataRate", StringValue("1Mbps"));
        delaytime = std::to_string(route[i][2])+"ms";
        p2pvector[i].SetChannelAttribute("Delay", StringValue(delaytime));
@@ -240,6 +242,7 @@ int main (int argc, char *argv[])
 
     std::vector<NetDeviceContainer> netvector(bridgenum);
     for(uint i=0; i<bridgenum; i++){
+        // printf("%u\n", i);
         netvector[i] = pointToPoint.Install(linkvector[i]);
     }
 
