@@ -76,3 +76,9 @@ wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노
 다음 사진은 이번 project에서 구성한 Network Topology를 간단하게 나타낸 것입니다.
 
 ![image](https://user-images.githubusercontent.com/30406090/171147934-be619c49-bf42-46d2-b74e-83b3a93210eb.JPG)
+
+
+## References
+
+1. The ns-3 development team, “ns-3 network simulator.” https://www.nsnam.org/docs/release/3.29/tutorial/html/ 
+2. https://github.com/guoxiliu/VideoStream-NS3
