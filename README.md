@@ -16,7 +16,7 @@ Also we considered routing algorithm like Dijkstra.
 
 
 ### RTP
-#### Routing Algorithm
+#### Scenario with Routing Algorithm
 1. Dijkstra Algorithm
 
 ![image](https://user-images.githubusercontent.com/34998542/171118417-9b3610f5-0543-41bd-9053-06dead9ef5e7.png)
@@ -37,26 +37,29 @@ Also we considered routing algorithm like Dijkstra.
 출발지로부터 목적지까지의 최단 거리와 경로를 2차원 vector 형식으로 저장합니다.
 
 2. Connection (Wi-Fi)
-
+다익스트라 알고리즘을 통해 저장된 경로를 이용합니다.
+Wi-Fi 설정에 필요한 Station Node와 AP Node를 만들고 Helper를 통해 설정하고 연결해주는 과정을 거칩니다.
+(YansWifiChannelHelper, YansWifiPhyHelper, WifiHelper, WifiMacHelper, MobilityHelper, InternetStackHelper, Ipv4AddressHelper
+  , VideoStreamServerHelper, VideoStreamClientHelper, Ipv4GlobalRoutingHelper)를 이용합니다.
+Routing을 구현하기 위해 router의 역할을 하는 node에 client와 server를 모두 설치하여 send와 receive의 기능이 모두 작동하도록 합니다.
 
 3. Connection (P2P)
-txt 파일에 있는 값들을 받아 wifi와 거의 동일한 전처리 과정을 거칩니다.
+input.txt 파일에 있는 값들을 받아 wifi와 거의 동일한 전처리 과정을 거칩니다.
 대부분의 Helper 변수(PointToPointHelper, InternetStackHelper, Ipv4AddressHelper, VideoStreamServerHelper)는
 하나씩만 선언하고 대부분의 Container 변수(NodeContainer, NetDeviceContainer, Ipv4InterfaceContainer, ApplicationContainer)는
 노드의 개수( input.txt 2번째 숫자 +2 : 클라 1개 서버 1개를 가정하고 만들어서 서버 n개의 경우 코드 수정 필요)만큼 선언합니다.
 선언된 Helper 및 Container다익스트라 알고리즘을 통해 사전에 구한 경로대로 설치합니다.
-이때 111~118번째에서 설치할 node의 index를 n이라 하면 주소값을 "10.1.(n+1).0" 형태로 만들어줍니다.
-wifi 코드와 비슷한 방식으로 클라이언트를 제외한 나머지 노드에 서버를, 서버를 제외한 나머지 노드에 클라이언트를 깔아
-통신합니다.
+이 때, 설치할 node의 index를 n이라 하면 주소값을 "10.1.(n+1).0" 형태로 만들어줍니다.
+wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노드에 서버를, 서버를 제외한 나머지 노드에 클라이언트를 깔아 통신합니다.
 
 #### simple_rtp rule
-0. RTP header를 통해 sequence 번호 같이 전달. (seq 0은 non-request signal)
-1. Client에서 빠진 packet Sequence 검출해 해당 sequence 서버에 요청
-2. Server는 요청받은 sequence 포함 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송.
+0. RTP header를 통해 sequence 번호 같이 전달합니다. (seq 0은 non-request signal)
+1. Client에서 빠진 packet Sequence 검출하여 해당 sequence 서버에 요청합니다.
+2. Server는 요청받은 sequence 포함 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송합니다.
 
 #### Realiable Streaming
-0. Framefile 에 사진들의 이름이 적혀있음.
-1. 25(frameRate)개의 사진(frame)이 모여 1초의 동영상을 전달하는 것으로 취급됨.
-2. 1 frame은 여러개의 Sequence로 이루어져 있음. 서버의 seq를 보낼 때 frame이 몇 sequence로 이루어졌는지도 보냄. (frameLastSeq)
-3. 정기적으로 client 쪽에서 missing Seq을 서버로 보냄 (있다면)
+0. Framefile에 사진들의 이름이 적혀있습니다.
+1. 25(frameRate)개의 사진(frame)이 모여 1초의 동영상을 전달하는 것으로 간주됩니다.
+2. 1 frame은 여러 개의 Sequence로 이루어져 있습니다. 서버의 seq를 보낼 때 frame이 몇 sequence로 이루어졌는지도 전송합니다. (frameLastSeq)
+3. 만약 miss가 존재한다면, 정기적으로 client 쪽에서 missing Seq을 서버로 보냅니다.
 4. frameLastSeq를 보고 client 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장.
