@@ -16,6 +16,19 @@ Also we considered routing algorithm like Dijkstra.
 
 
 ### RTP
+
+#### simple_rtp rule
+0. RTP header를 통해 sequence 번호 같이 전달합니다. (seq 0은 non-request signal)
+1. Client에서 빠진 packet Sequence 검출하여 해당 sequence 서버에 요청합니다.
+2. Server는 요청받은 sequence 포함 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송합니다.
+
+#### Realiable Streaming
+0. Framefile에 사진들의 이름이 적혀있습니다.
+1. 25(frameRate)개의 사진(frame)이 모여 1초의 동영상을 전달하는 것으로 간주됩니다.
+2. 1 frame은 여러 개의 Sequence로 이루어져 있습니다. 서버의 seq를 보낼 때 frame이 몇 sequence로 이루어졌는지도 전송합니다. (frameLastSeq)
+3. 만약 miss가 존재한다면, 정기적으로 client 쪽에서 missing Seq을 서버로 보냅니다.
+4. frameLastSeq를 보고 client 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장합니다.
+
 #### Scenario with Routing Algorithm
 1. Dijkstra Algorithm
 
@@ -54,14 +67,5 @@ input.txt 파일에 있는 값들을 받아 wifi와 거의 동일한 전처리 �
 이 때, 설치할 node의 index를 n이라 하면 주소값을 "10.1.(n+1).0" 형태로 만들어줍니다.
 wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노드에 서버를, 서버를 제외한 나머지 노드에 클라이언트를 깔아 통신합니다.
 
-#### simple_rtp rule
-0. RTP header를 통해 sequence 번호 같이 전달합니다. (seq 0은 non-request signal)
-1. Client에서 빠진 packet Sequence 검출하여 해당 sequence 서버에 요청합니다.
-2. Server는 요청받은 sequence 포함 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송합니다.
+다음 사진은 이번 project에서 구성한 Network Topology를 간단하게 나타낸 것입니다.
 
-#### Realiable Streaming
-0. Framefile에 사진들의 이름이 적혀있습니다.
-1. 25(frameRate)개의 사진(frame)이 모여 1초의 동영상을 전달하는 것으로 간주됩니다.
-2. 1 frame은 여러 개의 Sequence로 이루어져 있습니다. 서버의 seq를 보낼 때 frame이 몇 sequence로 이루어졌는지도 전송합니다. (frameLastSeq)
-3. 만약 miss가 존재한다면, 정기적으로 client 쪽에서 missing Seq을 서버로 보냅니다.
-4. frameLastSeq를 보고 client 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장.
