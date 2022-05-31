@@ -18,7 +18,9 @@ Also we considered routing algorithm like Dijkstra.
 ### RTP
 #### Routing Algorithm
 1. Dijkstra Algorithm
+
 ![image](https://user-images.githubusercontent.com/34998542/171118417-9b3610f5-0543-41bd-9053-06dead9ef5e7.png)
+
 * 링크 상태 정보를 모든 라우터에 전달하여 최단 경로 트리를 구성하는 라우팅 프로토콜 알고리즘 - 다익스트라(Dijkstra) 알고리즘 사용하여 구현
 
 * Input(Topology 정보):
