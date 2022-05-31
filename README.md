@@ -1,11 +1,12 @@
 # NetworkProject-2022-1_Team11
 This project is an Application using NS-3, refering many points to [this](https://github.com/guoxiliu/VideoStream-NS3).
 
+
 ### Prerequisites
-ns-3 (version 3.30), Python (`python 2.7+` or `python 3.5+`), C++ compiler (`clang++` or `g++`)
+ns-3 (version 3.29), Python (`python 2.7+` or `python 3.5+`), C++ compiler (`clang++` or `g++`)
 
 ### How to install
-1. Download and build `ns-3` following the official document [here](https://www.nsnam.org/docs/release/3.30/tutorial/singlehtml/index.html#getting-started).
+1. Download and build `ns-3` following the official document [here](https://www.nsnam.org/docs/release/3.29/tutorial/singlehtml/index.html#getting-started).
 2. Copy the files **exactly** into the folders of the `ns-3`. (Be aware of the `wscript` in `src->applications`, otherwise the video streaming application will not be installed!)
 3. Run `./waf` or `./waf build` to build the new application.
 4. Run `./waf --run videoStreamer` for the testing program (you can change `CASE` in `videoStreamTest.cc` for different network environments).
@@ -77,9 +78,15 @@ wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노
 
 ![image](https://user-images.githubusercontent.com/30406090/171147934-be619c49-bf42-46d2-b74e-83b3a93210eb.JPG)
 
+---
 
 ## References
 
 1. The ns-3 development team, “ns-3 network simulator”, https://www.nsnam.org/docs/release/3.29/tutorial/html 
 2. Guoxi and L.Kong, "VideoStream-NS3", https://github.com/guoxiliu/VideoStream-NS3
 3. Wikipedia, "Real-time Transport Protocol", https://en.wikipedia.org/wiki/Real-time_Transport_Protocol Accessed: 2022-05-17.
+
+
+## License
+
+본 프로젝트는 `GPLv2` 라이선스 하에 공개되어 있습니다. 모델 및 코드를 사용할 경우 라이선스 내용을 준수해주세요. 라이선스 전문은 `LICENSE` 파일에서 확인하실 수 있습니다.
