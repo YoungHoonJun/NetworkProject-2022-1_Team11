@@ -18,10 +18,13 @@ Also we considered routing algorithm like Dijkstra.
 ### Model
 
 #### RTP Rule
-0. 서버에서 패킷을 전송할 때, RTP header를 추가해 sequence number와 해당 frame의 마지막 sequence number를 같이 전달합니다. (sequence = 0은 retransmit이 필요 없음을 의미.)
-1. 서버는 보낸 패킷들을 queue에 넣어 저장합니다.
-2. 클라이언트는 받은 패킷을 sequence 순서대로 읽어 빠진 sequence를 검출하여 해당 sequence를 서버에 요청합니다.
-3. 서버는 클라이언트로부터 요청받은 sequence 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷을 전송합니다.
+
+0. our RTP Header
+![image](https://user-images.githubusercontent.com/49546550/171166302-93026288-0413-4b89-b039-c756de324d45.png)
+1. 서버에서 패킷을 전송할 때, RTP header를 추가해 sequence number와 해당 frame의 마지막 sequence number를 같이 전달합니다. (sequence = 0은 retransmit이 필요 없음을 의미.)
+2. 서버는 보낸 패킷들을 queue에 넣어 저장합니다.
+3. 클라이언트는 받은 패킷을 sequence 순서대로 읽어 빠진 sequence를 검출하여 해당 sequence를 서버에 요청합니다.
+4. 서버는 클라이언트로부터 요청받은 sequence 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷을 전송합니다.
 
 #### Realiable Streaming
 0. Framefile에는 사진들의 이름이 적혀있습니다.
