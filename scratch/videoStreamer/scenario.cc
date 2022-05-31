@@ -59,7 +59,7 @@ void dijkstra(uint32_t start) {
  * 2. New system(p2p)
 **/
 
-#define CASE 2
+#define CASE 1
 
 NS_LOG_COMPONENT_DEFINE ("VideoStreamTest");
 
@@ -131,16 +131,14 @@ int main (int argc, char *argv[])
   v_temp.push_back(temp2);
   v_temp.push_back(temp3);
   route.push_back(v_temp);
+  len = route.size();
+  bridgeNum = len;
 
   Time::SetResolution (Time::NS);
   LogComponentEnable ("VideoStreamClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable ("VideoStreamServerApplication", LOG_LEVEL_INFO);
   if (CASE == 1)
-  {
-    
-		len = route.size();
-		bridgeNum = len;
-      
+  {   
     const uint32_t nWifi = nodeNum + 2, nAp = nodeNum + 2;
     NodeContainer wifiStaNodes;
     wifiStaNodes.Create (nWifi);
@@ -228,7 +226,7 @@ int main (int argc, char *argv[])
     NodeContainer nodes;
     nodes.Create (nodeNum + 2);
     std::string delaytime;
-    const uint32_t bridgenum = bridgeNum + 2;
+    const uint32_t bridgenum = len;
     std::vector<NodeContainer> linkvector(bridgenum);
     for(uint i=0; i<bridgenum; i++){
         linkvector[i] = NodeContainer(nodes.Get(route[i][0]),nodes.Get(route[i][1]));
@@ -236,19 +234,15 @@ int main (int argc, char *argv[])
 
     // dif delay
     std::vector<PointToPointHelper> p2pvector(bridgeNum);
-    for(uint i=0; i<bridgeNum; i++){
+    for(uint i=0; i<bridgenum; i++){
        p2pvector[i].SetDeviceAttribute("DataRate", StringValue("100Mbps"));
        delaytime = std::to_string(route[i][2])+"ms";
        p2pvector[i].SetChannelAttribute("Delay", StringValue(delaytime));
     }
-    
-    PointToPointHelper pointToPoint;
-    pointToPoint.SetDeviceAttribute("DataRate", StringValue("200Mbps"));
-    pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
 
     std::vector<NetDeviceContainer> netvector(bridgenum);
     for(uint i=0; i<bridgenum; i++){
-        netvector[i] = pointToPoint.Install(linkvector[i]);
+        netvector[i] = p2pvector[i].Install(linkvector[i]);
     }
 
     InternetStackHelper stack;
@@ -285,8 +279,9 @@ int main (int argc, char *argv[])
         serverApps.Start(Seconds(0.0));
         serverApps.Stop(Seconds(100.0));
     }
-    
-    pointToPoint.EnablePcap("videoStream", netvector[0].Get(0),false);
+    for(uint k=0; k<bridgenum; k++){
+         p2pvector[k].EnablePcap("videoStream", netvector[0].Get(0),false);
+    }
     
     Simulator::Run ();
     Simulator::Destroy ();  
