@@ -1,8 +1,9 @@
 # NetworkProject-2022-1_Team11
 This project is an Application using NS-3, refering many points to [this](https://github.com/guoxiliu/VideoStream-NS3).
 
+
 ### Prerequisites
-ns-3 (version 3.30), Python (`python 2.7+` or `python 3.5+`), C++ compiler (`clang++` or `g++`)
+ns-3 (version 3.29), Python (`python 2.7+` or `python 3.5+`), C++ compiler (`clang++` or `g++`)
 
 ### How to install
 1. Download and build `ns-3` following the official document [here](https://www.nsnam.org/docs/release/3.29/tutorial/singlehtml/index.html#getting-started).
@@ -77,6 +78,7 @@ wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노
 
 ![image](https://user-images.githubusercontent.com/30406090/171147934-be619c49-bf42-46d2-b74e-83b3a93210eb.JPG)
 
+---
 
 ## References
 
