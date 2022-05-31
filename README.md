@@ -80,5 +80,6 @@ wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노
 
 ## References
 
-1. The ns-3 development team, “ns-3 network simulator.” https://www.nsnam.org/docs/release/3.29/tutorial/html/ 
-2. https://github.com/guoxiliu/VideoStream-NS3
+1. The ns-3 development team, “ns-3 network simulator”, https://www.nsnam.org/docs/release/3.29/tutorial/html 
+2. Guoxi and L.Kong, "VideoStream-NS3", https://github.com/guoxiliu/VideoStream-NS3
+3. Wikipedia, "Real-time Transport Protocol", https://en.wikipedia.org/wiki/Real-time_Transport_Protocol Accessed: 2022-05-17.
