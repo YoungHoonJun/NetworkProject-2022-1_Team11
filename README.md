@@ -37,6 +37,7 @@ Also we considered routing algorithm like Dijkstra.
 출발지로부터 목적지까지의 최단 거리와 경로를 2차원 vector 형식으로 저장합니다.
 
 2. Connection (Wi-Fi)
+
 다익스트라 알고리즘을 통해 저장된 경로를 이용합니다.
 Wi-Fi 설정에 필요한 Station Node와 AP Node를 만들고 Helper를 통해 설정하고 연결해주는 과정을 거칩니다.
 (YansWifiChannelHelper, YansWifiPhyHelper, WifiHelper, WifiMacHelper, MobilityHelper, InternetStackHelper, Ipv4AddressHelper
@@ -44,6 +45,7 @@ Wi-Fi 설정에 필요한 Station Node와 AP Node를 만들고 Helper를 통해 
 Routing을 구현하기 위해 router의 역할을 하는 node에 client와 server를 모두 설치하여 send와 receive의 기능이 모두 작동하도록 합니다.
 
 3. Connection (P2P)
+
 input.txt 파일에 있는 값들을 받아 wifi와 거의 동일한 전처리 과정을 거칩니다.
 대부분의 Helper 변수(PointToPointHelper, InternetStackHelper, Ipv4AddressHelper, VideoStreamServerHelper)는
 하나씩만 선언하고 대부분의 Container 변수(NodeContainer, NetDeviceContainer, Ipv4InterfaceContainer, ApplicationContainer)는
