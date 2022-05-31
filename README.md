@@ -15,20 +15,22 @@ This project's main purpose is by sending a lot of pictures (or -videos) with di
 Also we considered routing algorithm like Dijkstra.
 
 
-### RTP
+### Model
 
 #### RTP Rule
-0. 서버에서 패킷을 전송할 때, RTP header를 추가해 sequence number와 해당 frame의 마지막 sequence number를 같이 전달합니다. (seq = 0은 retransmit이 필요 없음을 의미.)
+0. 서버에서 패킷을 전송할 때, RTP header를 추가해 sequence number와 해당 frame의 마지막 sequence number를 같이 전달합니다. (sequence = 0은 retransmit이 필요 없음을 의미.)
 1. 서버는 보낸 패킷들을 queue에 넣어 저장합니다.
-2. Client에서는 받은 패킷을 seq 순서대로 읽어 빠진 packet Sequence를 검출하여 해당 sequence를 서버에 요청합니다.
-3. Server는 요청받은 sequence 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷 전송합니다.
+2. 클라이언트는 받은 패킷을 sequence 순서대로 읽어 빠진 sequence를 검출하여 해당 sequence를 서버에 요청합니다.
+3. 서버는 클라이언트로부터 요청받은 sequence 이전의 모든 패킷을 queue에서 꺼내고, 요청받은 패킷을 전송합니다.
 
 #### Realiable Streaming
-0. Framefile에 사진들의 이름이 적혀있습니다.
+0. Framefile에는 사진들의 이름이 적혀있습니다.
 1. 25(frameRate)개의 사진(frame)이 모여 1초의 동영상을 전달하는 것으로 간주됩니다.
-2. 1 frame은 여러 개의 Sequence로 이루어져 있습니다. 서버의 seq를 보낼 때 frame이 몇 sequence로 이루어졌는지도 전송합니다. (frameLastSeq)
-3. 만약 miss가 존재한다면, 정기적으로 client 쪽에서 missing seq를 서버로 보냅니다.
-4. frameLastSeq를 보고 client 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장합니다.
+2. 1 frame은 여러 개의 sequence로 이루어져 있습니다. 서버가 sequence를 보낼 때 frame이 몇 sequence로 이루어졌는지도 RTP header를 통해 같이 전송합니다. (frameLastSeq)
+3. 클라이언트가 받은 패킷 중 만약 miss가 존재한다면, 정기적으로 클라이언트 쪽에서 missing sequence를 서버로 보냅니다.
+4. frameLastSeq를 보고 클라이언트 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장합니다.
+
+### Testing Scenario
 
 #### Scenario with Routing Algorithm
 1. Dijkstra Algorithm
