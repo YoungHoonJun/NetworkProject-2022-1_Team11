@@ -53,7 +53,7 @@ Also we considered routing algorithm like Dijkstra.
 3. 클라이언트가 받은 패킷 중 만약 miss가 존재한다면, 정기적으로 클라이언트 쪽에서 missing sequence를 서버로 보냅니다.
 4. frameLastSeq를 보고 클라이언트 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장합니다.
 
-#### Application attributes
+#### Application Attributes
 
 * video-stream-server
 
