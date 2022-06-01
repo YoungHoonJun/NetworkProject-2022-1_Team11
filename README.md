@@ -6,8 +6,17 @@ This project is an Application using NS-3, refering many points to [this](https:
 ns-3 (version 3.29), Python (`python 2.7+` or `python 3.5+`), C++ compiler (`clang++` or `g++`)
 
 ### How to install
+
+* Install using Docker
+
+```sh
+docker pull gozak16/netproj:final
+```
+
+* Install from scratch
+
 1. Download and build `ns-3` following the official document [here](https://www.nsnam.org/docs/release/3.29/tutorial/singlehtml/index.html#getting-started).
-2. Copy the files **exactly** into the folders of the `ns-3`. (Be aware of the `wscript` in `src->applications`, otherwise the video streaming application will not be installed!)
+2. Copy the files **exactly** into the folders of the `ns-3`. (Be aware of the `wscript` in `src->applications` and `src->internet`, otherwise the video streaming application will not be installed!)
 3. Run `./waf` or `./waf build` to build the new application.
 4. Run `./waf --run videoStreamer` for the testing program (you can change `CASE` in `videoStreamTest.cc` for different network environments).  
 5. Check the frames PNG files in ./scratch/videoStreamer/videos/
