@@ -88,7 +88,7 @@ Routing을 구현하기 위해 router의 역할을 하는 node에 client와 serv
 input.txt 파일에 있는 값들을 받아 wifi와 거의 동일한 전처리 과정을 거칩니다.
 대부분의 Helper 변수(PointToPointHelper, InternetStackHelper, Ipv4AddressHelper, VideoStreamServerHelper)는
 하나씩만 선언하고 대부분의 Container 변수(NodeContainer, NetDeviceContainer, Ipv4InterfaceContainer, ApplicationContainer)는
-노드의 개수( input.txt 2번째 숫자 +2 : 클라 1개 서버 1개를 가정하고 만들어서 서버 n개의 경우 코드 수정 필요)만큼 선언합니다.
+다익스트라 알고리즘을 통해 계산된 연결의 수 만큼 선언합니다.
 선언된 Helper 및 Container다익스트라 알고리즘을 통해 사전에 구한 경로대로 설치합니다.
 이 때, 설치할 node의 index를 n이라 하면 주소값을 "10.1.(n+1).0" 형태로 만들어줍니다.
 wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노드에 서버를, 서버를 제외한 나머지 노드에 클라이언트를 깔아 통신합니다.
