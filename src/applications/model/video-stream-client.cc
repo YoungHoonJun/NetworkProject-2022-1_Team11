@@ -143,8 +143,6 @@ VideoStreamClient::StartApplication (void)
       NS_ASSERT_MSG (false, "Incompatible address type: " << m_peerAddress);
     }
   }
-	std::string filePath = "./scratch/videoStreamer/videos";
-	mkdir(filePath.c_str(), 0666);
 	// Set handle read, signalEvent, buffer Event. (Send Event is only called once)
 	m_sendMissingSignalEvent = Simulator::Schedule(MicroSeconds(m_reReqDelay * 10), &VideoStreamClient::SendMissingSignal, this);	
   m_socket->SetRecvCallback (MakeCallback (&VideoStreamClient::HandleRead, this));
@@ -296,6 +294,10 @@ VideoStreamClient::ReadFromBuffer (void)
 			std::string filePath = "./scratch/videoStreamer/videos/";
 			std::string curPath = filePath + std::to_string(m_frameSec)+ "." + std::to_string(frameSeq) + ".png";
 			
+			std::string videoPath = "./scratch/videoStreamer/videos";
+			mkdir(videoPath.c_str(), 0666);
+			//check there is videoPath
+
 			FILE* fp;
 			fp = fopen(curPath.c_str(), "w");
 			if (fp==NULL) printf("Cannot open the file");
