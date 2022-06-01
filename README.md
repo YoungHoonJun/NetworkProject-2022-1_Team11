@@ -18,8 +18,17 @@ docker pull gozak16/netproj:final
 1. Download and build `ns-3` following the official document [here](https://www.nsnam.org/docs/release/3.29/tutorial/singlehtml/index.html#getting-started).
 2. Copy the files **exactly** into the folders of the `ns-3`. (Be aware of the `wscript` in `src->applications` and `src->internet`, otherwise the video streaming application will not be installed!)
 3. Run `./waf` or `./waf build` to build the new application.
-4. Run `./waf --run videoStreamer` for the testing program (you can change `CASE` in `videoStreamTest.cc` for different network environments).  
+4. Run `./waf --run videoStreamer` for the testing program (you can change `CASE` in `scenario.cc` for different network environments).  
 5. Check the frames PNG files in ./scratch/videoStreamer/videos/
+
+* input files (in ./scratch/videoStreamer)
+1. input.txt - network connection information file
+2. frameList - txt file that contains name of the frames
+3. images - real images, containing 6 different sizes  
+
+* output files (in ./scratch/videoStreamer)
+1. videos - videos that are received by client  
+
 
 ### Subject
 This project's main purpose is by sending a lot of pictures (or -videos) with differnet quality depending on buffering.  
@@ -43,6 +52,34 @@ Also we considered routing algorithm like Dijkstra.
 2. 1 frame은 여러 개의 sequence로 이루어져 있습니다. 서버가 sequence를 보낼 때 frame이 몇 sequence로 이루어졌는지도 RTP header를 통해 같이 전송합니다. (frameLastSeq)
 3. 클라이언트가 받은 패킷 중 만약 miss가 존재한다면, 정기적으로 클라이언트 쪽에서 missing sequence를 서버로 보냅니다.
 4. frameLastSeq를 보고 클라이언트 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장합니다.
+
+#### Application attributes
+
+* video-stream-server
+
+| Attribute name | Type | Default | Description |
+| ----------- | ------ | ------ | ------------- |
+| `Interval` | TimeValue | Seconds(0.15) | The time to wait between packets |
+| `Port` | UintegerValue | 5000 | Port on which we listen for incoming packets. |
+| `MaxPacketSize` | UintegerValue | 1400 | The maximum size of a packet |
+| `FrameFile` | StringValue | None | The file that contains the video frame sizes |
+| `VideoLength` | UintegerValue | 60 | The length of the video in seconds |
+
+* video-stream-client
+
+| Attribute name | Type | Default | Description |
+| ----------- | ------ | ------ | ------------- |
+| `RemoteAddress` | AddressValue | None | The destination address of the outbound packets |
+| `RemotePort` | UintegerValue | 5000 | The destination port of the outbound packets |
+| `IsRTP` | BooleanValue | true | True if the client wants to use RTP |
+
+#### Log Component
+
+| Log Component | Application |
+| ----------- | ------ |
+| `VideoStreamServerApplication` | video-steram-server |
+| `VideoStreamClientApplication` | video-steram-client |
+
 
 ### Testing Scenario
 
@@ -79,7 +116,7 @@ Routing을 구현하기 위해 router의 역할을 하는 node에 client와 serv
 input.txt 파일에 있는 값들을 받아 wifi와 거의 동일한 전처리 과정을 거칩니다.
 대부분의 Helper 변수(PointToPointHelper, InternetStackHelper, Ipv4AddressHelper, VideoStreamServerHelper)는
 하나씩만 선언하고 대부분의 Container 변수(NodeContainer, NetDeviceContainer, Ipv4InterfaceContainer, ApplicationContainer)는
-노드의 개수( input.txt 2번째 숫자 +2 : 클라 1개 서버 1개를 가정하고 만들어서 서버 n개의 경우 코드 수정 필요)만큼 선언합니다.
+다익스트라 알고리즘을 통해 계산된 연결의 수 만큼 선언합니다.
 선언된 Helper 및 Container다익스트라 알고리즘을 통해 사전에 구한 경로대로 설치합니다.
 이 때, 설치할 node의 index를 n이라 하면 주소값을 "10.1.(n+1).0" 형태로 만들어줍니다.
 wifi 코드와 유사한 방식으로 클라이언트를 제외한 나머지 노드에 서버를, 서버를 제외한 나머지 노드에 클라이언트를 깔아 통신합니다.
