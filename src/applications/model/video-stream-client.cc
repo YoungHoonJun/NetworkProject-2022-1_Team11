@@ -295,7 +295,7 @@ VideoStreamClient::ReadFromBuffer (void)
 			std::string curPath = filePath + std::to_string(m_frameSec)+ "." + std::to_string(frameSeq) + ".png";
 			
 			std::string videoPath = "./scratch/videoStreamer/videos";
-			mkdir(videoPath.c_str(), 0666);
+			mkdir(videoPath.c_str(), 0777);
 			//check there is videoPath
 
 			FILE* fp;
