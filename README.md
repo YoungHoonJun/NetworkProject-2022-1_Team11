@@ -44,6 +44,34 @@ Also we considered routing algorithm like Dijkstra.
 3. 클라이언트가 받은 패킷 중 만약 miss가 존재한다면, 정기적으로 클라이언트 쪽에서 missing sequence를 서버로 보냅니다.
 4. frameLastSeq를 보고 클라이언트 쪽에서는 buffer로 저장했다가, frameRate만큼 모이면 25장을 output 파일로 저장합니다.
 
+#### Application attributes
+
+* video-stream-server
+
+| Attribute name | Type | Default | Description |
+| ----------- | ------ | ------ | ------------- |
+| `Interval` | TimeValue | Seconds(0.15) | The time to wait between packets |
+| `Port` | UintegerValue | 5000 | Port on which we listen for incoming packets. |
+| `MaxPacketSize` | UintegerValue | 1400 | The maximum size of a packet |
+| `FrameFile` | StringValue | None | The file that contains the video frame sizes |
+| `VideoLength` | UintegerValue | 60 | The length of the video in seconds |
+
+* video-stream-client
+
+| Attribute name | Type | Default | Description |
+| ----------- | ------ | ------ | ------------- |
+| `RemoteAddress` | AddressValue | None | The destination address of the outbound packets |
+| `RemotePort` | UintegerValue | 5000 | The destination port of the outbound packets |
+| `IsRTP` | BooleanValue | true | True if the client wants to use RTP |
+
+#### Log Component
+
+| Log Component | Application |
+| ----------- | ------ |
+| `VideoStreamServerApplication` | video-steram-server |
+| `VideoStreamClientApplication` | video-steram-client |
+
+
 ### Testing Scenario
 
 #### Scenario with Routing Algorithm
