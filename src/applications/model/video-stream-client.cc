@@ -16,6 +16,7 @@
 #include "ns3/rtp-header.h"
 #include "ns3/boolean.h"
 #include "ns3/output-stream-wrapper.h"
+#include <sys/stat.h>
 #define MAXFRAMESIZE 10000000
 
 namespace ns3 {
@@ -142,7 +143,8 @@ VideoStreamClient::StartApplication (void)
       NS_ASSERT_MSG (false, "Incompatible address type: " << m_peerAddress);
     }
   }
-
+	std::string filePath = "./scratch/videoStreamer/videos";
+	mkdir(filePath.c_str(), 0666);
 	// Set handle read, signalEvent, buffer Event. (Send Event is only called once)
 	m_sendMissingSignalEvent = Simulator::Schedule(MicroSeconds(m_reReqDelay * 10), &VideoStreamClient::SendMissingSignal, this);	
   m_socket->SetRecvCallback (MakeCallback (&VideoStreamClient::HandleRead, this));
